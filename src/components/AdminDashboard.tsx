@@ -624,15 +624,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400'
                             : person.personnelType === 'non_teaching'
                             ? 'bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400'
+                            : person.personnelType === 'teaching_related'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
                             : person.personnelType === 'jo'
                             ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'
-                            : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
+                            : 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
                         }`}
                       >
                         {person.personnelType === 'teaching'
                           ? 'Teaching Faculty'
                           : person.personnelType === 'non_teaching'
                           ? 'Non-Teaching'
+                          : person.personnelType === 'teaching_related'
+                          ? 'Teaching-Related'
                           : person.personnelType === 'jo'
                           ? 'Job Order (JO)'
                           : 'Contractual Service (CoS)'}

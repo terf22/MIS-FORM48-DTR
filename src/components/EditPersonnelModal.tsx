@@ -169,6 +169,16 @@ export const EditPersonnelModal: React.FC<EditPersonnelModalProps> = ({
       departmentId,
       departmentName: targetDeptName,
       personnelType,
+      positionDesignation:
+        personnelType === 'teaching'
+          ? 'Teaching'
+          : personnelType === 'non_teaching'
+          ? 'Non-Teaching'
+          : personnelType === 'teaching_related'
+          ? 'Teaching-Related'
+          : personnelType === 'jo'
+          ? 'JO'
+          : 'CoS',
       status,
       role,
       email: email.trim() || `${empNo.toLowerCase()}@deped.gov.ph`,
@@ -396,17 +406,18 @@ export const EditPersonnelModal: React.FC<EditPersonnelModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Personnel Classification *
+                  Official Position Designation / Classification *
                 </label>
                 <select
                   value={personnelType}
                   onChange={(e) => handleTypeSelect(e.target.value as PersonnelType)}
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold"
                 >
-                  <option value="teaching">Teaching Personnel</option>
-                  <option value="non_teaching">Non-Teaching Staff</option>
-                  <option value="jo">Job Order (JO) Staff</option>
-                  <option value="cos">Contractual Service (COS) Staff</option>
+                  <option value="teaching">Teaching</option>
+                  <option value="non_teaching">Non-Teaching</option>
+                  <option value="teaching_related">Teaching-Related</option>
+                  <option value="jo">JO</option>
+                  <option value="cos">CoS</option>
                 </select>
               </div>
 

@@ -51,7 +51,8 @@ export interface DivisionStat {
 }
 
 export type UserRole = 'admin' | 'dept_head' | 'teacher' | 'non_teaching';
-export type PersonnelType = 'teaching' | 'non_teaching' | 'jo' | 'cos';
+export type PersonnelType = 'teaching' | 'non_teaching' | 'teaching_related' | 'jo' | 'cos';
+export type PositionDesignation = 'Teaching' | 'Non-Teaching' | 'Teaching-Related' | 'JO' | 'CoS';
 export type EmploymentStatus = 'permanent' | 'provisionary' | 'contractual' | 'cos' | 'jo';
 export type RequestType = 'TIME_ADJUSTMENT' | 'OFFICIAL_BUSINESS' | 'LEAVE_OF_ABSENCE';
 export type LanguageCode = 'en' | 'fil' | 'ceb' | 'ilo';
@@ -95,6 +96,7 @@ export interface Personnel {
   firstName: string;
   middleName: string;
   positionTitle: string;
+  positionDesignation?: PositionDesignation | string;
   employeeNumber: string;
   itemNumber: string;
   tin: string;

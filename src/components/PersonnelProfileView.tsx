@@ -14,8 +14,59 @@ import {
   Camera,
   Upload
 } from 'lucide-react';
-import { Personnel, LanguageCode } from '../types';
+import { Personnel, LanguageCode, PositionDesignation, PersonnelType } from '../types';
 import { processImageFile } from '../utils/imageUtils';
+
+export const DESIGNATION_OPTIONS: PositionDesignation[] = [
+  'Teaching',
+  'Non-Teaching',
+  'Teaching-Related',
+  'JO',
+  'CoS'
+];
+
+export const getDesignationFromPerson = (p?: Partial<Personnel>): PositionDesignation => {
+  if (p?.positionDesignation) {
+    const pd = p.positionDesignation.toLowerCase();
+    if (pd.includes('teaching-related') || pd.includes('related')) return 'Teaching-Related';
+    if (pd.includes('non-teaching') || pd.includes('non_teaching')) return 'Non-Teaching';
+    if (pd.includes('teaching')) return 'Teaching';
+    if (pd.includes('jo') || pd.includes('job order')) return 'JO';
+    if (pd.includes('cos') || pd.includes('contract')) return 'CoS';
+  }
+  if (p?.personnelType === 'non_teaching') return 'Non-Teaching';
+  if (p?.personnelType === 'teaching_related') return 'Teaching-Related';
+  if (p?.personnelType === 'jo') return 'JO';
+  if (p?.personnelType === 'cos') return 'CoS';
+  return 'Teaching';
+};
+
+export const designationToPersonnelType = (des: PositionDesignation): PersonnelType => {
+  switch (des) {
+    case 'Non-Teaching': return 'non_teaching';
+    case 'Teaching-Related': return 'teaching_related';
+    case 'JO': return 'jo';
+    case 'CoS': return 'cos';
+    case 'Teaching':
+    default:
+      return 'teaching';
+  }
+};
+
+export const getDesignationBadgeStyle = (des: PositionDesignation) => {
+  switch (des) {
+    case 'Teaching':
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 border-purple-200 dark:border-purple-800/60';
+    case 'Non-Teaching':
+      return 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/80 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800/60';
+    case 'Teaching-Related':
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60';
+    case 'JO':
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 border-amber-200 dark:border-amber-800/60';
+    case 'CoS':
+      return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/60';
+  }
+};
 
 interface PersonnelProfileViewProps {
   personnelList: Personnel[];
@@ -36,7 +87,7 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
   onLogAudit,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'ALL' | 'teaching' | 'non_teaching' | 'jo' | 'cos'>('ALL');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'teaching' | 'non_teaching' | 'teaching_related' | 'jo' | 'cos'>('ALL');
   const [selectedPersonnelId, setSelectedPersonnelId] = useState<string>(
     personnelList.length > 0 ? personnelList[0].id : ''
   );
@@ -91,17 +142,35 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
   const handleSaveProfile = () => {
     if (!selectedPersonnel || !editForm) return;
 
+    const chosenDesignation = editForm.positionDesignation || getDesignationFromPerson(editForm);
+    const chosenType = editForm.personnelType || designationToPersonnelType(chosenDesignation);
+
     const updated: Personnel = {
       ...selectedPersonnel,
       ...editForm,
       fullName: editForm.fullName || `${editForm.lastName || ''}, ${editForm.firstName || ''} ${editForm.middleName || ''}`.trim(),
       name: editForm.fullName || selectedPersonnel.name,
       title: editForm.positionTitle || selectedPersonnel.title,
+      positionTitle: editForm.positionTitle || selectedPersonnel.positionTitle || selectedPersonnel.title,
+      positionDesignation: chosenDesignation,
+      personnelType: chosenType,
     };
 
     onUpdatePersonnel(updated);
     setIsEditingProfile(false);
     onLogAudit('UPDATE_PERSONNEL_PROFILE', 'SYSTEM', `Updated personnel profile for ${updated.name} (${updated.employeeId}).`);
+  };
+
+  const handleQuickDesignationChange = (newDesignation: PositionDesignation) => {
+    if (!selectedPersonnel) return;
+    const newType = designationToPersonnelType(newDesignation);
+    const updated: Personnel = {
+      ...selectedPersonnel,
+      positionDesignation: newDesignation,
+      personnelType: newType,
+    };
+    onUpdatePersonnel(updated);
+    onLogAudit('UPDATE_PERSONNEL_DESIGNATION', 'SYSTEM', `Changed position designation of ${updated.name} to ${newDesignation}.`);
   };
 
   const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -209,7 +278,7 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
 
             {/* Type Filters */}
             <div className="flex items-center space-x-1 overflow-x-auto pb-1 text-[11px] font-semibold text-slate-500">
-              {(['ALL', 'teaching', 'non_teaching', 'jo', 'cos'] as const).map((t) => (
+              {(['ALL', 'teaching', 'non_teaching', 'teaching_related', 'jo', 'cos'] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTypeFilter(t)}
@@ -225,6 +294,8 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                     ? 'Teaching'
                     : t === 'non_teaching'
                     ? 'Non-Teaching'
+                    : t === 'teaching_related'
+                    ? 'Teaching-Related'
                     : t === 'jo'
                     ? 'JO'
                     : 'CoS'}
@@ -351,13 +422,11 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                           {selectedPersonnel.fullName || selectedPersonnel.name}
                         </h2>
                         <span
-                          className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${
-                            selectedPersonnel.personnelType === 'teaching'
-                              ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300'
-                              : 'bg-cyan-100 text-cyan-700 dark:bg-cyan-950/80 dark:text-cyan-300'
-                          }`}
+                          className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${getDesignationBadgeStyle(
+                            getDesignationFromPerson(selectedPersonnel)
+                          )}`}
                         >
-                          {selectedPersonnel.personnelType === 'teaching' ? 'Teaching Faculty' : 'Non-Teaching Staff'}
+                          {getDesignationFromPerson(selectedPersonnel)}
                         </span>
                       </div>
                       <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 mt-0.5">
@@ -524,20 +593,90 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                       </div>
                     </div>
 
-                    {/* Field 5: Position Title */}
+                    {/* Field 5: Position Title & Official Position Designation */}
                     <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                        5. Official Position Designation
-                      </label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          5. Official Position Designation
+                        </label>
+                        {!isEditingProfile && (
+                          <span
+                            className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase border ${getDesignationBadgeStyle(
+                              getDesignationFromPerson(selectedPersonnel)
+                            )}`}
+                          >
+                            {getDesignationFromPerson(selectedPersonnel)}
+                          </span>
+                        )}
+                      </div>
+
                       {isEditingProfile ? (
-                        <input
-                          type="text"
-                          value={editForm.positionTitle ?? selectedPersonnel.positionTitle ?? ''}
-                          onChange={(e) => setEditForm({ ...editForm, positionTitle: e.target.value })}
-                          className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-100"
-                        />
+                        <div className="space-y-2.5">
+                          {/* Dropdown for Official Position Designation */}
+                          <div>
+                            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
+                              Designation Classification (Dropdown) *
+                            </label>
+                            <select
+                              value={
+                                editForm.positionDesignation ||
+                                getDesignationFromPerson(editForm.personnelType ? { personnelType: editForm.personnelType } : selectedPersonnel)
+                              }
+                              onChange={(e) => {
+                                const val = e.target.value as PositionDesignation;
+                                const newType = designationToPersonnelType(val);
+                                setEditForm({
+                                  ...editForm,
+                                  positionDesignation: val,
+                                  personnelType: newType
+                                });
+                              }}
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+                            >
+                              {DESIGNATION_OPTIONS.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Position Title */}
+                          <div>
+                            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
+                              Official Position Title (DepEd Plantilla / Designation)
+                            </label>
+                            <input
+                              type="text"
+                              value={editForm.positionTitle ?? selectedPersonnel.positionTitle ?? ''}
+                              onChange={(e) => setEditForm({ ...editForm, positionTitle: e.target.value })}
+                              placeholder="e.g. Master Teacher I, Teacher III, Admin Officer II..."
+                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+                            />
+                          </div>
+                        </div>
                       ) : (
-                        <div className="font-bold text-slate-800 dark:text-slate-100">{selectedPersonnel.positionTitle || selectedPersonnel.title}</div>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                            {selectedPersonnel.positionTitle || selectedPersonnel.title || '-'}
+                          </div>
+                          {/* Quick dropdown for instant switching even outside edit mode */}
+                          <div className="flex items-center space-x-1.5 shrink-0">
+                            <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">Designation:</span>
+                            <select
+                              value={getDesignationFromPerson(selectedPersonnel)}
+                              onChange={(e) => handleQuickDesignationChange(e.target.value as PositionDesignation)}
+                              className="text-[11px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+                              title="Select Official Position Designation (Teaching, Non-Teaching, Teaching-Related, JO, CoS)"
+                            >
+                              {DESIGNATION_OPTIONS.map((opt) => (
+                                <option key={opt} value={opt}>
+                                  {opt}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
                       )}
                     </div>
 
