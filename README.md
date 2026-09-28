@@ -127,9 +127,33 @@ git branch -M main
 # 5. Link your GitHub remote repository (replace with your actual GitHub repository URL)
 git remote add origin https://github.com/<YOUR-USERNAME>/mangusu-is-csc-form-48-dtr.git
 
-# 6. Push code to GitHub
+# 6. Push code to GitHub (sets up upstream tracking for origin main)
 git push -u origin main
 ```
+
+### ⚡ Automatic 1-Command Publishing & Pushing
+
+Whenever you make changes, you don't need to manually type multiple git commands. You can now use any of these automatic options:
+
+* **Using npm:**
+  ```bash
+  npm run publish-gh
+  ```
+  *(Automatically runs `git add -A`, commits, and runs `git push origin main`)*
+
+* **Using the publish script:**
+  ```bash
+  ./publish.sh "My updated commit message"
+  ```
+  *(Or on Windows, double-click `publish.bat`)*
+
+* **Direct Push:**
+  ```bash
+  npm run push
+  ```
+  *(Runs `git push origin main` directly)*
+
+Once pushed, GitHub Actions will automatically detect the push to `main` and deploy the updated application to GitHub Pages.
 
 ---
 
