@@ -594,90 +594,68 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                     </div>
 
                     {/* Field 5: Position Title & Official Position Designation */}
-                    <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                          5. Official Position Designation
+                    <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1 truncate" title="5. Official Position Designation">
+                          5. Official Designation
                         </label>
-                        {!isEditingProfile && (
-                          <span
-                            className={`px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase border ${getDesignationBadgeStyle(
-                              getDesignationFromPerson(selectedPersonnel)
-                            )}`}
+                        {isEditingProfile ? (
+                          <select
+                            value={
+                              editForm.positionDesignation ||
+                              getDesignationFromPerson(editForm.personnelType ? { personnelType: editForm.personnelType } : selectedPersonnel)
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value as PositionDesignation;
+                              const newType = designationToPersonnelType(val);
+                              setEditForm({
+                                ...editForm,
+                                positionDesignation: val,
+                                personnelType: newType,
+                              });
+                            }}
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-slate-800 dark:text-slate-100 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-500"
                           >
-                            {getDesignationFromPerson(selectedPersonnel)}
-                          </span>
+                            {DESIGNATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <select
+                            value={getDesignationFromPerson(selectedPersonnel)}
+                            onChange={(e) => handleQuickDesignationChange(e.target.value as PositionDesignation)}
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-slate-800 dark:text-slate-100 text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
+                            title="Select Official Position Designation (Teaching, Non-Teaching, Teaching-Related, JO, CoS)"
+                          >
+                            {DESIGNATION_OPTIONS.map((opt) => (
+                              <option key={opt} value={opt}>
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
                         )}
                       </div>
 
-                      {isEditingProfile ? (
-                        <div className="space-y-2.5">
-                          {/* Dropdown for Official Position Designation */}
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
-                              Designation Classification (Dropdown) *
-                            </label>
-                            <select
-                              value={
-                                editForm.positionDesignation ||
-                                getDesignationFromPerson(editForm.personnelType ? { personnelType: editForm.personnelType } : selectedPersonnel)
-                              }
-                              onChange={(e) => {
-                                const val = e.target.value as PositionDesignation;
-                                const newType = designationToPersonnelType(val);
-                                setEditForm({
-                                  ...editForm,
-                                  positionDesignation: val,
-                                  personnelType: newType
-                                });
-                              }}
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
-                            >
-                              {DESIGNATION_OPTIONS.map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {/* Position Title */}
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide block mb-1">
-                              Official Position Title (DepEd Plantilla / Designation)
-                            </label>
-                            <input
-                              type="text"
-                              value={editForm.positionTitle ?? selectedPersonnel.positionTitle ?? ''}
-                              onChange={(e) => setEditForm({ ...editForm, positionTitle: e.target.value })}
-                              placeholder="e.g. Master Teacher I, Teacher III, Admin Officer II..."
-                              className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-400 uppercase block mb-1 truncate" title="Official Position Title">
+                          Position Title
+                        </label>
+                        {isEditingProfile ? (
+                          <input
+                            type="text"
+                            value={editForm.positionTitle ?? selectedPersonnel.positionTitle ?? ''}
+                            onChange={(e) => setEditForm({ ...editForm, positionTitle: e.target.value })}
+                            placeholder="e.g. Master Teacher I"
+                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500"
+                          />
+                        ) : (
+                          <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs py-1 truncate">
                             {selectedPersonnel.positionTitle || selectedPersonnel.title || '-'}
                           </div>
-                          {/* Quick dropdown for instant switching even outside edit mode */}
-                          <div className="flex items-center space-x-1.5 shrink-0">
-                            <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">Designation:</span>
-                            <select
-                              value={getDesignationFromPerson(selectedPersonnel)}
-                              onChange={(e) => handleQuickDesignationChange(e.target.value as PositionDesignation)}
-                              className="text-[11px] font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1 text-slate-800 dark:text-slate-100 cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
-                              title="Select Official Position Designation (Teaching, Non-Teaching, Teaching-Related, JO, CoS)"
-                            >
-                              {DESIGNATION_OPTIONS.map((opt) => (
-                                <option key={opt} value={opt}>
-                                  {opt}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
 
                     {/* Field 6: Employee / Plantilla Number */}
