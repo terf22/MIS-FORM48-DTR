@@ -16,8 +16,6 @@ import {
   GitMerge,
   ShieldCheck,
   AlertTriangle,
-  Lock,
-  FileCheck,
   Sparkles,
   ChevronRight
 } from 'lucide-react';
@@ -26,9 +24,7 @@ import { parsePersonnelExcelFile, generateSamplePersonnelExcel } from '../utils/
 import {
   analyzeSmartMerge,
   executeSmartMergeApplication,
-  generateSampleSmartMergeExcel,
-  exportEncryptedTransferPackage,
-  importEncryptedTransferPackage
+  generateSampleSmartMergeExcel
 } from '../utils/smartMergeEngine';
 import { SmartMergeModal } from './SmartMergeModal';
 import {
@@ -37,15 +33,13 @@ import {
   Personnel,
   MonthlyDTR,
   SmartMergeAnalysis,
-  ConflictResolutionChoice,
-  AoiiEncTransferPackage
+  ConflictResolutionChoice
 } from '../types';
 import { translations } from '../utils/translations';
 
 interface ExcelUploaderProps {
   personnelList?: Personnel[];
   dtrMap?: Record<string, MonthlyDTR>;
-  serviceRecordsMap?: Record<string, any[]>;
   onApplyImportedLogs: (
     personnelLogsMap: Record<string, DTRDayEntry[]>,
     personnelNameMap: Record<string, string>,
@@ -58,9 +52,6 @@ interface ExcelUploaderProps {
     resolutions: Record<string, ConflictResolutionChoice>
   ) => void;
   onImportPersonnelBatch?: (importedPersonnel: Personnel[]) => void;
-  onMergeTransferTeachers?: (
-    transferPackage: AoiiEncTransferPackage
-  ) => void;
   lang: LanguageCode;
   onLogAudit: (action: string, category: 'EXCEL_IMPORT' | 'SYSTEM' | 'BACKUP', details: string) => void;
 }
@@ -68,16 +59,14 @@ interface ExcelUploaderProps {
 export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
   personnelList = [],
   dtrMap = {},
-  serviceRecordsMap = {},
   onApplyImportedLogs,
   onExecuteSmartMerge,
   onImportPersonnelBatch,
-  onMergeTransferTeachers,
   lang,
   onLogAudit
 }) => {
   const t = translations[lang];
-  const [activeMode, setActiveMode] = useState<'dtr_logs' | 'personnel_roster' | 'secure_portal'>('dtr_logs');
+  const [activeMode, setActiveMode] = useState<'dtr_logs' | 'personnel_roster'>('dtr_logs');
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -103,10 +92,6 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
     personnelList: Personnel[];
     summary: string;
   } | null>(null);
-
-  // Secure Transfer Portal (.aoii.enc) State
-  const [transferImportResult, setTransferImportResult] = useState<AoiiEncTransferPackage | null>(null);
-  const [transferFileName, setTransferFileName] = useState<string>('');
 
   const [targetMonth, setTargetMonth] = useState<number>(7);
   const [targetYear, setTargetYear] = useState<number>(2026);
@@ -167,17 +152,6 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
           'EXCEL_PERSONNEL_PARSE_SUCCESS',
           'EXCEL_IMPORT',
           `Successfully parsed Personnel Master file "${file.name}" - ${result.recordsParsed} employee profiles extracted.`
-        );
-      } else if (activeMode === 'secure_portal') {
-        const text = await file.text();
-        const parsedPackage = importEncryptedTransferPackage(text);
-        setTransferImportResult(parsedPackage);
-        setTransferFileName(file.name);
-
-        onLogAudit(
-          'AOII_ENC_PORTAL_DECRYPT_SUCCESS',
-          'BACKUP',
-          `Successfully decrypted transfer package "${file.name}" from ${parsedPackage.originSchool} (${parsedPackage.teachers.length} teachers).`
         );
       }
     } catch (err: any) {
@@ -243,40 +217,6 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
     setTimeout(() => setAppliedNotice(null), 8000);
   };
 
-  const handleApplyTransferPackage = () => {
-    if (!transferImportResult) return;
-    if (onMergeTransferTeachers) {
-      onMergeTransferTeachers(transferImportResult);
-    } else if (onImportPersonnelBatch) {
-      onImportPersonnelBatch(transferImportResult.teachers.map((t) => t.personnel));
-    }
-    const noticeMsg = `Successfully decrypted and merged ${transferImportResult.teachers.length} transferring teachers from "${transferImportResult.originSchool}" into your school roster without overwriting existing faculty!`;
-    setAppliedNotice(noticeMsg);
-    onLogAudit(
-      'TRANSFER_TEACHERS_MERGED',
-      'BACKUP',
-      `Merged ${transferImportResult.teachers.length} transferring teachers from ${transferImportResult.originSchool}`
-    );
-    setTransferImportResult(null);
-    setTimeout(() => setAppliedNotice(null), 8000);
-  };
-
-  const handleExportTransferPackage = () => {
-    if (personnelList.length === 0) {
-      setErrorMessage('No teachers currently registered in school roster to export.');
-      return;
-    }
-    const cipher = exportEncryptedTransferPackage(personnelList, serviceRecordsMap, dtrMap, 'San Fernando High School');
-    const blob = new Blob([cipher], { type: 'application/octet-stream' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DepEd_Transfer_Faculty_${new Date().toISOString().split('T')[0]}.aoii.enc`;
-    a.click();
-    URL.revokeObjectURL(url);
-    onLogAudit('AOII_ENC_EXPORT', 'BACKUP', `Exported encrypted teacher transfer package (${personnelList.length} teachers)`);
-  };
-
   return (
     <div className="space-y-6">
       
@@ -312,22 +252,6 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
         >
           <Users className="w-4 h-4" />
           <span>Personnel Master Roster (12 DepEd Fields)</span>
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveMode('secure_portal');
-            setErrorMessage(null);
-            setAppliedNotice(null);
-          }}
-          className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 ${
-            activeMode === 'secure_portal'
-              ? 'bg-violet-600 text-white shadow-md'
-              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Lock className="w-4 h-4" />
-          <span>Secure Transfer Portal (.aoii.enc)</span>
         </button>
       </div>
 
@@ -437,33 +361,6 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
         </div>
       )}
 
-      {/* Mode 3: Secure Data Portal (.aoii.enc) */}
-      {activeMode === 'secure_portal' && (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 border border-slate-800 rounded-2xl p-6 text-slate-100 shadow-xl flex flex-wrap items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <Lock className="w-6 h-6 text-violet-400" />
-                <h2 className="text-xl font-bold tracking-tight text-white">
-                  Secure Inter-School Data Portal (.aoii.enc)
-                </h2>
-              </div>
-              <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-                Transfer faculty records between DepEd schools safely. Encrypted <code>.aoii.enc</code> files allow incoming teachers (with complete service records & DTRs) to be decrypted and merged seamlessly into your local school roster without overwriting existing faculty.
-              </p>
-            </div>
-
-            <button
-              onClick={handleExportTransferPackage}
-              className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-lg flex items-center space-x-2 transition"
-            >
-              <Download className="w-4 h-4" />
-              <span>Export Roster to .aoii.enc Transfer File</span>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Universal Dropzone Container */}
       <div
         onDragOver={(e) => {
@@ -480,7 +377,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
       >
         <input
           type="file"
-          accept={activeMode === 'secure_portal' ? '.aoii.enc, .enc, .txt' : '.xlsx, .xls, .csv'}
+          accept=".xlsx, .xls, .csv"
           onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
         />
@@ -498,9 +395,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
             <h3 className="text-sm font-bold text-slate-800 dark:text-white">
               {activeMode === 'dtr_logs'
                 ? 'Drop Biometric Punch Log (.xlsx / .csv) here for Smart Merge'
-                : activeMode === 'personnel_roster'
-                ? 'Drop Personnel Master Spreadsheet (.xlsx / .csv) here'
-                : 'Drop Encrypted Transfer File (.aoii.enc) here'}
+                : 'Drop Personnel Master Spreadsheet (.xlsx / .csv) here'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               or click to browse files on your computer
@@ -658,72 +553,6 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
                     <td className="p-2.5 font-mono text-[11px] text-slate-500">{p.itemNumber}</td>
                     <td className="p-2.5">{p.districtOrSchool}</td>
                     <td className="p-2.5 font-mono text-slate-500">{p.gsisBpNo}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Result Preview for Secure Data Portal (.aoii.enc) */}
-      {activeMode === 'secure_portal' && transferImportResult && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 space-y-4 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2">
-                <FileCheck className="w-5 h-5 text-violet-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Decrypted Inter-School Transfer Package
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Origin School: <b>{transferImportResult.originSchool}</b> | Transferring Faculty: <b>{transferImportResult.teachers.length} Teachers</b>
-              </p>
-            </div>
-
-            <button
-              onClick={handleApplyTransferPackage}
-              className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-md flex items-center gap-1.5"
-            >
-              <span>Merge {transferImportResult.teachers.length} Transferring Teachers into School Roster</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
-                  <th className="p-2.5">Teacher Name</th>
-                  <th className="p-2.5">Position</th>
-                  <th className="p-2.5">Emp Number</th>
-                  <th className="p-2.5">Service Record Entries</th>
-                  <th className="p-2.5">Historical DTRs</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {transferImportResult.teachers.map((item) => (
-                  <tr key={item.personnel.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td className="p-2.5 font-bold text-slate-900 dark:text-white">
-                      {item.personnel.fullName}
-                    </td>
-                    <td className="p-2.5 text-violet-600 dark:text-violet-400 font-semibold">
-                      {item.personnel.positionTitle}
-                    </td>
-                    <td className="p-2.5 font-mono text-slate-500">
-                      #{item.personnel.employeeNumber}
-                    </td>
-                    <td className="p-2.5">
-                      <span className="font-bold text-emerald-600">
-                        {item.serviceRecords?.length || 0} Appointments Logged
-                      </span>
-                    </td>
-                    <td className="p-2.5">
-                      <span className="font-bold text-blue-600">
-                        {item.recentDtrs?.length || 0} DTR Cards
-                      </span>
-                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -8,8 +8,7 @@ import {
   SmartMergeConflict,
   NewPersonnelCandidate,
   SmartMergeAnalysis,
-  ConflictResolutionChoice,
-  AoiiEncTransferPackage
+  ConflictResolutionChoice
 } from '../types';
 import { calculateDayTimeLoss, generateSampleBiometricExcel } from './cscForm48';
 
@@ -703,64 +702,6 @@ export function executeSmartMergeApplication(
     auditSummary,
     appliedCount
   };
-}
-
-// ==========================================
-// SECURE DATA PORTAL (.aoii.enc) HELPERS
-// ==========================================
-
-/**
- * Exports personnel and their service records / Form 48 DTRs into an encrypted `.aoii.enc` transfer package.
- * Allows transferring teachers from another school to be securely shared.
- */
-export function exportEncryptedTransferPackage(
-  teachers: Personnel[],
-  serviceRecordsMap: Record<string, any[]>,
-  dtrMap: Record<string, MonthlyDTR>,
-  schoolOrigin: string = 'DepEd Division Office'
-): string {
-  const packageData: AoiiEncTransferPackage = {
-    format: 'DEPED_AOII_TRANSFER_V1',
-    exportedAt: new Date().toISOString(),
-    originSchool: schoolOrigin,
-    originDivision: 'Division of San Fernando',
-    teachers: teachers.map((p) => ({
-      personnel: p,
-      serviceRecords: serviceRecordsMap[p.id] || p.serviceRecords || [],
-      recentDtrs: Object.values(dtrMap).filter((d) => d.personnelId === p.id)
-    })),
-    checksum: `AOII-${Date.now().toString(36).toUpperCase()}`
-  };
-
-  const jsonString = JSON.stringify(packageData);
-  // Reversible Base64 payload with DepEd AOII cipher header
-  const encoded = btoa(unescape(encodeURIComponent(jsonString)));
-  const cipherEnvelope = `-----BEGIN DEPED AOII SECURE TRANSFER ENVELOPE-----\n${encoded}\n-----END DEPED AOII SECURE TRANSFER ENVELOPE-----`;
-
-  return cipherEnvelope;
-}
-
-/**
- * Decrypts and parses a `.aoii.enc` transfer package for seamless school roster merging.
- */
-export function importEncryptedTransferPackage(fileContent: string): AoiiEncTransferPackage {
-  try {
-    const clean = fileContent
-      .replace(/-----BEGIN DEPED AOII SECURE TRANSFER ENVELOPE-----/g, '')
-      .replace(/-----END DEPED AOII SECURE TRANSFER ENVELOPE-----/g, '')
-      .trim();
-
-    const decoded = decodeURIComponent(escape(atob(clean)));
-    const parsed: AoiiEncTransferPackage = JSON.parse(decoded);
-
-    if (parsed.format !== 'DEPED_AOII_TRANSFER_V1' || !Array.isArray(parsed.teachers)) {
-      throw new Error('Unrecognized or corrupted .aoii.enc encryption format.');
-    }
-
-    return parsed;
-  } catch (err: any) {
-    throw new Error(`Failed to decrypt .aoii.enc package: ${err.message || 'Invalid passphrase or structure'}`);
-  }
 }
 
 /**

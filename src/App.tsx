@@ -28,8 +28,7 @@ import {
   LanguageCode,
   DtrNavTab,
   SmartMergeAnalysis,
-  ConflictResolutionChoice,
-  AoiiEncTransferPackage
+  ConflictResolutionChoice
 } from './types';
 import {
   Users,
@@ -533,82 +532,6 @@ export default function App() {
     );
   };
 
-  const handleMergeTransferTeachers = (transferPackage: AoiiEncTransferPackage) => {
-    let updatedList = [...personnelList];
-    let updatedDtrs = { ...dtrMap };
-    let newTeachersAdded = 0;
-    let existingUpdated = 0;
-
-    let currentServiceMap: Record<string, any[]> = {};
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('deped_dtr_service_records_map');
-      if (saved) {
-        try {
-          currentServiceMap = JSON.parse(saved);
-        } catch (e) {}
-      }
-    }
-
-    transferPackage.teachers.forEach((item) => {
-      const incomingP = item.personnel;
-      const existingIdx = updatedList.findIndex(
-        (p) =>
-          p.employeeNumber === incomingP.employeeNumber ||
-          p.employeeId === incomingP.employeeId ||
-          p.name.toLowerCase() === incomingP.name.toLowerCase()
-      );
-
-      let targetId = incomingP.id;
-
-      if (existingIdx !== -1) {
-        targetId = updatedList[existingIdx].id;
-        existingUpdated++;
-      } else {
-        updatedList.push(incomingP);
-        targetId = incomingP.id;
-        newTeachersAdded++;
-      }
-
-      if (item.serviceRecords && item.serviceRecords.length > 0) {
-        const existingSR = currentServiceMap[targetId] || [];
-        const mergedSR = [...existingSR];
-        item.serviceRecords.forEach((sr) => {
-          if (!mergedSR.some((ex) => ex.dateFrom === sr.dateFrom && ex.designation === sr.designation)) {
-            mergedSR.push(sr);
-          }
-        });
-        currentServiceMap[targetId] = mergedSR;
-      }
-
-      if (item.recentDtrs && item.recentDtrs.length > 0) {
-        item.recentDtrs.forEach((dtr) => {
-          const dtrKey = `${targetId}-${dtr.year}-${dtr.month}`;
-          if (!updatedDtrs[dtrKey]) {
-            updatedDtrs[dtrKey] = {
-              ...dtr,
-              personnelId: targetId
-            };
-          }
-        });
-      }
-    });
-
-    setPersonnelList(updatedList);
-    setDtrMap(updatedDtrs);
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('deped_dtr_service_records_map', JSON.stringify(currentServiceMap));
-      localStorage.setItem('deped_dtr_personnel_list', JSON.stringify(updatedList));
-      localStorage.setItem('deped_dtr_map', JSON.stringify(updatedDtrs));
-    }
-
-    handleLogAudit(
-      'AOII_ENC_PORTAL_MERGE',
-      'BACKUP',
-      `Transferred & merged ${transferPackage.teachers.length} teachers from ${transferPackage.originSchool}: ${newTeachersAdded} new faculty added, ${existingUpdated} existing faculty linked without overwriting.`
-    );
-  };
-
   const handleLogAudit = (
     action: string,
     category: 'SECURITY' | 'EXCEL_IMPORT' | 'DTR_EDIT' | 'APPROVAL' | 'BACKUP' | 'SYSTEM',
@@ -958,7 +881,6 @@ export default function App() {
                 onApplyImportedLogs={handleApplyImportedLogs}
                 onExecuteSmartMerge={handleExecuteSmartMerge}
                 onImportPersonnelBatch={handleImportPersonnelBatch}
-                onMergeTransferTeachers={handleMergeTransferTeachers}
                 onLogAudit={handleLogAudit}
                 lang={lang}
               />

@@ -623,18 +623,15 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                             ))}
                           </select>
                         ) : (
-                          <select
-                            value={getDesignationFromPerson(selectedPersonnel)}
-                            onChange={(e) => handleQuickDesignationChange(e.target.value as PositionDesignation)}
-                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1 text-slate-800 dark:text-slate-100 text-xs font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-sm"
-                            title="Select Official Position Designation (Teaching, Non-Teaching, Teaching-Related, JO, CoS)"
-                          >
-                            {DESIGNATION_OPTIONS.map((opt) => (
-                              <option key={opt} value={opt}>
-                                {opt}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="font-semibold text-slate-800 dark:text-slate-200 text-xs py-1 truncate">
+                            <span
+                              className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase border ${getDesignationBadgeStyle(
+                                getDesignationFromPerson(selectedPersonnel)
+                              )}`}
+                            >
+                              {getDesignationFromPerson(selectedPersonnel)}
+                            </span>
+                          </div>
                         )}
                       </div>
 

@@ -308,17 +308,4 @@ export interface SmartMergeAnalysis {
   fileName: string;
 }
 
-// Secure Data Portal Transfer Package (.aoii.enc)
-export interface AoiiEncTransferPackage {
-  format: 'DEPED_AOII_TRANSFER_V1';
-  exportedAt: string;
-  originSchool: string;
-  originDivision: string;
-  teachers: {
-    personnel: Personnel;
-    serviceRecords?: ServiceRecordEntry[];
-    recentDtrs?: MonthlyDTR[];
-  }[];
-  checksum: string;
-}
 
