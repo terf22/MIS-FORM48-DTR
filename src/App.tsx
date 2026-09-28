@@ -694,6 +694,36 @@ export default function App() {
     );
   };
 
+  const handleDeletePersonnel = (personnelId: string) => {
+    const target = personnelList.find((p) => p.id === personnelId);
+    if (!target) return;
+
+    const updatedList = personnelList.filter((p) => p.id !== personnelId);
+    setPersonnelList(updatedList);
+    localStorage.setItem('deped_dtr_personnel_list', JSON.stringify(updatedList));
+
+    // Remove associated DTR records
+    setDtrMap((prev) => {
+      const nextMap = { ...prev };
+      Object.keys(nextMap).forEach((key) => {
+        if (key.startsWith(`${personnelId}-`)) {
+          delete nextMap[key];
+        }
+      });
+      return nextMap;
+    });
+
+    if (selectedPersonnel?.id === personnelId) {
+      setSelectedPersonnel(updatedList.length > 0 ? updatedList[0] : null);
+    }
+
+    handleLogAudit(
+      'DELETE_PERSONNEL',
+      'SYSTEM',
+      `Deleted personnel profile: ${target.name} (${target.employeeId}).`
+    );
+  };
+
   const handleImportPersonnelBatch = (importedPersonnelList: Personnel[]) => {
     setPersonnelList((prev) => {
       const existingNos = new Set(prev.map((p) => p.employeeNumber));
@@ -874,6 +904,7 @@ export default function App() {
             <PersonnelProfileView
               personnelList={personnelList}
               onUpdatePersonnel={handleUpdatePersonnel}
+              onDeletePersonnel={handleDeletePersonnel}
               onSelectPersonnelForForm48={(p) => {
                 setSelectedPersonnel(p);
                 setActiveTab('form48');
@@ -901,6 +932,7 @@ export default function App() {
               }}
               onUpdateDTRDay={handleUpdateDTRDay}
               onUpdatePersonnel={handleUpdatePersonnel}
+              onDeletePersonnel={handleDeletePersonnel}
               onUpdateInCharge={handleUpdateInCharge}
               currentRole={currentRole}
               lang={lang}

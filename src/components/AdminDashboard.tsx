@@ -13,7 +13,8 @@ import {
   UserCheck,
   Award,
   ChevronRight,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
 import {
   BarChart,
@@ -39,6 +40,7 @@ interface AdminDashboardProps {
   pendingCount?: number;
   onSelectPersonnelForForm48: (p: Personnel) => void;
   onUpdatePersonnel?: (updated: Personnel) => void;
+  onDeletePersonnel?: (personnelId: string) => void;
   onUpdateInCharge?: (headName: string, headTitle: string, targetDeptId?: string, applyToAll?: boolean) => void;
   lang: LanguageCode;
   onLogAudit: (action: string, category: 'SYSTEM', details: string) => void;
@@ -51,6 +53,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   dtrMap = {},
   pendingCount = 0,
   onSelectPersonnelForForm48,
+  onDeletePersonnel,
   lang,
   onOpenAddPersonnelModal
 }) => {
@@ -643,13 +646,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         : '08:00 - 17:00'}
                     </td>
                     <td className="p-3.5 text-right">
-                      <button
-                        onClick={() => onSelectPersonnelForForm48(person)}
-                        className="px-3 py-1.5 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/60 dark:hover:bg-violet-900/80 text-violet-600 dark:text-violet-300 font-semibold text-[11px] rounded-xl transition flex items-center space-x-1 ml-auto"
-                      >
-                        <span>Open Form 48</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center justify-end space-x-1.5 ml-auto">
+                        <button
+                          onClick={() => onSelectPersonnelForForm48(person)}
+                          className="px-3 py-1.5 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/60 dark:hover:bg-violet-900/80 text-violet-600 dark:text-violet-300 font-semibold text-[11px] rounded-xl transition flex items-center space-x-1"
+                        >
+                          <span>Open Form 48</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </button>
+                        {onDeletePersonnel && (
+                          <button
+                            type="button"
+                            onClick={() => onDeletePersonnel(person.id)}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl transition"
+                            title={`Delete ${person.name}`}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

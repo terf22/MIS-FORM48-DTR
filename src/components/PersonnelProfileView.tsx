@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Users,
   Search,
@@ -9,13 +9,18 @@ import {
   Check,
   X,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  Trash2,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { Personnel, LanguageCode } from '../types';
+import { processImageFile } from '../utils/imageUtils';
 
 interface PersonnelProfileViewProps {
   personnelList: Personnel[];
   onUpdatePersonnel: (updated: Personnel) => void;
+  onDeletePersonnel: (personnelId: string) => void;
   onSelectPersonnelForForm48: (p: Personnel) => void;
   onOpenAddPersonnelModal: () => void;
   onLogAudit: (action: string, category: 'SYSTEM', details: string) => void;
@@ -25,6 +30,7 @@ interface PersonnelProfileViewProps {
 export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
   personnelList,
   onUpdatePersonnel,
+  onDeletePersonnel,
   onSelectPersonnelForForm48,
   onOpenAddPersonnelModal,
   onLogAudit,
@@ -34,6 +40,14 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
   const [selectedPersonnelId, setSelectedPersonnelId] = useState<string>(
     personnelList.length > 0 ? personnelList[0].id : ''
   );
+
+  // Deletion modal state
+  const [personnelToDelete, setPersonnelToDelete] = useState<Personnel | null>(null);
+
+  // Picture upload state
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const editAvatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Editing 12 DepEd/CSC fields
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -88,6 +102,64 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
     onUpdatePersonnel(updated);
     setIsEditingProfile(false);
     onLogAudit('UPDATE_PERSONNEL_PROFILE', 'SYSTEM', `Updated personnel profile for ${updated.name} (${updated.employeeId}).`);
+  };
+
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedPersonnel) return;
+    try {
+      setIsUploadingPhoto(true);
+      const dataUrl = await processImageFile(file, 256);
+      const updated: Personnel = {
+        ...selectedPersonnel,
+        avatarUrl: dataUrl
+      };
+      onUpdatePersonnel(updated);
+      onLogAudit(
+        'UPDATE_PERSONNEL_PICTURE',
+        'SYSTEM',
+        `Uploaded profile picture for ${selectedPersonnel.name} (${selectedPersonnel.employeeId}).`
+      );
+    } catch (err) {
+      console.error(err);
+      alert('Unable to process the image. Please upload a standard JPG or PNG photo.');
+    } finally {
+      setIsUploadingPhoto(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = '';
+    }
+  };
+
+  const handleEditFormAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingPhoto(true);
+      const dataUrl = await processImageFile(file, 256);
+      setEditForm((prev) => ({
+        ...prev,
+        avatarUrl: dataUrl
+      }));
+    } catch (err) {
+      console.error(err);
+      alert('Unable to process the image. Please upload a valid image file.');
+    } finally {
+      setIsUploadingPhoto(false);
+      if (editAvatarInputRef.current) editAvatarInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    if (!selectedPersonnel) return;
+    const updated: Personnel = {
+      ...selectedPersonnel,
+      avatarUrl: undefined
+    };
+    onUpdatePersonnel(updated);
+    onLogAudit(
+      'REMOVE_PERSONNEL_PICTURE',
+      'SYSTEM',
+      `Removed profile picture for ${selectedPersonnel.name} (${selectedPersonnel.employeeId}).`
+    );
   };
 
   return (
@@ -209,7 +281,20 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                         </div>
                       </div>
 
-                      <ChevronRight className={`w-4 h-4 shrink-0 ${isSelected ? 'text-violet-600' : 'text-slate-300'}`} />
+                      <div className="flex items-center space-x-1 shrink-0 ml-2">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPersonnelToDelete(person);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition"
+                          title={`Delete ${person.name}`}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <ChevronRight className={`w-4 h-4 shrink-0 ${isSelected ? 'text-violet-600' : 'text-slate-300'}`} />
+                      </div>
                     </div>
                   );
                 })
@@ -231,14 +316,35 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
               <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-5">
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex items-center space-x-4">
-                    <img
-                      src={
-                        selectedPersonnel.avatarUrl ||
-                        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120'
-                      }
-                      alt={selectedPersonnel.name}
-                      className="w-16 h-16 rounded-2xl object-cover ring-4 ring-violet-500/20 shadow-md"
-                    />
+                    {/* Interactive Picture Upload Avatar */}
+                    <div className="relative group shrink-0">
+                      <img
+                        src={
+                          selectedPersonnel.avatarUrl ||
+                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120'
+                        }
+                        alt={selectedPersonnel.name}
+                        className="w-16 h-16 rounded-2xl object-cover ring-4 ring-violet-500/20 shadow-md transition group-hover:brightness-90"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={isUploadingPhoto}
+                        className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px] rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition cursor-pointer"
+                        title="Upload/Change Picture"
+                      >
+                        <Camera className="w-5 h-5" />
+                        <span className="text-[9px] font-bold mt-0.5">Upload</span>
+                      </button>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleAvatarFile}
+                      />
+                    </div>
+
                     <div>
                       <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-extrabold text-slate-800 dark:text-slate-100">
@@ -257,6 +363,29 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                       <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 mt-0.5">
                         {selectedPersonnel.positionTitle || selectedPersonnel.title}
                       </p>
+
+                      {/* Photo management buttons */}
+                      <div className="flex items-center space-x-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => avatarInputRef.current?.click()}
+                          disabled={isUploadingPhoto}
+                          className="px-2.5 py-1 bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/60 dark:hover:bg-violet-900/60 text-violet-600 dark:text-violet-300 rounded-lg text-[10px] font-bold flex items-center space-x-1.5 transition active:scale-95"
+                        >
+                          <Camera className="w-3 h-3" />
+                          <span>{isUploadingPhoto ? 'Uploading...' : 'Upload Picture'}</span>
+                        </button>
+                        {selectedPersonnel.avatarUrl && (
+                          <button
+                            type="button"
+                            onClick={handleRemoveAvatar}
+                            className="px-2 py-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg text-[10px] font-medium transition"
+                          >
+                            Remove Picture
+                          </button>
+                        )}
+                      </div>
+
                       <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                         <span className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">
                           <Building2 className="w-3 h-3 text-slate-400" />
@@ -280,6 +409,15 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
                     >
                       <FileText className="w-4 h-4" />
                       <span>Open CSC Form 48 DTR</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPersonnelToDelete(selectedPersonnel)}
+                      className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 font-semibold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 active:scale-[0.98]"
+                      title={`Delete ${selectedPersonnel.name} from records`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Personnel</span>
                     </button>
                   </div>
                 </div>
@@ -523,6 +661,60 @@ export const PersonnelProfileView: React.FC<PersonnelProfileViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {personnelToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl text-slate-800 dark:text-slate-100 space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 rounded-2xl">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-800 dark:text-white">Delete Personnel Record</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Civil Service & DepEd Roster Deletion</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 rounded-2xl text-xs space-y-2">
+              <p className="text-slate-600 dark:text-slate-300">
+                Are you sure you want to permanently delete:
+              </p>
+              <div className="font-bold text-slate-900 dark:text-white text-sm">
+                {personnelToDelete.fullName || personnelToDelete.name}
+              </div>
+              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                Employee No: {personnelToDelete.employeeNumber || personnelToDelete.employeeId} • {personnelToDelete.departmentName}
+              </div>
+              <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium pt-1">
+                ⚠️ Warning: This will erase their personnel profile and associated Civil Service Form 48 monthly DTR records.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setPersonnelToDelete(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const id = personnelToDelete.id;
+                  setPersonnelToDelete(null);
+                  onDeletePersonnel(id);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-600/20 flex items-center space-x-1.5 active:scale-95"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Confirm Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

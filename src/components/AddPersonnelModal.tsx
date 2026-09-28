@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { UserPlus, X, Sparkles, Building2, Clock, Award, FileText } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { UserPlus, X, Sparkles, Building2, Clock, Award, FileText, Camera, Trash2 } from 'lucide-react';
 import { Department, Personnel, PersonnelType, UserRole } from '../types';
 import { extractPersonnelFromText, calculateStepIncrement } from '../utils/stepIncrementEngine';
+import { processImageFile } from '../utils/imageUtils';
 
 interface AddPersonnelModalProps {
   isOpen: boolean;
@@ -30,6 +31,11 @@ export const AddPersonnelModal: React.FC<AddPersonnelModalProps> = ({
   const [placeOfBirth, setPlaceOfBirth] = useState('');
   const [districtOrSchool, setDistrictOrSchool] = useState('Mangusu Integrated School');
   const [gsisBpNo, setGsisBpNo] = useState('');
+
+  // Picture Upload State
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Unformatted Text Extractor State
   const [rawText, setRawText] = useState('');
@@ -99,6 +105,22 @@ export const AddPersonnelModal: React.FC<AddPersonnelModalProps> = ({
     setShowExtractor(false);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setIsUploadingPhoto(true);
+      const dataUrl = await processImageFile(file, 256);
+      setAvatarUrl(dataUrl);
+    } catch (err) {
+      console.error(err);
+      alert('Unable to process the image. Please select a valid JPG or PNG file.');
+    } finally {
+      setIsUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const empNo = employeeNumber.trim() || `EMP-${Date.now().toString().slice(-6)}`;
@@ -148,6 +170,7 @@ export const AddPersonnelModal: React.FC<AddPersonnelModalProps> = ({
       status: 'permanent',
       role,
       email: `${empNo.toLowerCase()}@deped.gov.ph`,
+      avatarUrl: avatarUrl || undefined,
       regularSchedule: {
         amArrival,
         amDeparture,
@@ -233,6 +256,65 @@ export const AddPersonnelModal: React.FC<AddPersonnelModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Personnel Picture Upload Card */}
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-3.5 rounded-2xl flex items-center justify-between gap-4 border border-slate-100 dark:border-slate-800">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="relative group shrink-0">
+                <img
+                  src={avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120'}
+                  alt="Personnel Preview"
+                  className="w-13 h-13 rounded-2xl object-cover ring-2 ring-violet-500/20 shadow-sm transition group-hover:brightness-90"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingPhoto}
+                  className="absolute inset-0 bg-slate-950/50 backdrop-blur-[1px] rounded-2xl opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition cursor-pointer"
+                  title="Upload picture"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                  Personnel Picture (Optional)
+                </span>
+                <p className="text-[11px] text-slate-400 truncate">
+                  Upload portrait photo for DTR ID card, Service Records, and biometrics
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingPhoto}
+                className="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 shadow-sm transition active:scale-95"
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>{isUploadingPhoto ? 'Uploading...' : avatarUrl ? 'Change' : 'Upload'}</span>
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={() => setAvatarUrl('')}
+                  className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition"
+                  title="Remove picture"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Section 1: Name Components */}
           <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl space-y-3">
             <span className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-wider block">

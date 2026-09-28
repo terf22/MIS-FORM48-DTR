@@ -45,6 +45,7 @@ interface CSCForm48ViewProps {
   departments?: Department[];
   onUpdateDTRDay: (dayNum: number, fieldOrObject: any, value?: any, targetPersonId?: string) => void;
   onUpdatePersonnel?: (updated: Personnel) => void;
+  onDeletePersonnel?: (personnelId: string) => void;
   onUpdateInCharge?: (headName: string, headTitle: string, targetDeptId?: string, applyToAll?: boolean) => void;
   currentRole: UserRole;
   lang: LanguageCode;
@@ -63,6 +64,7 @@ export const CSCForm48View: React.FC<CSCForm48ViewProps> = ({
   departments = [],
   onUpdateDTRDay,
   onUpdatePersonnel,
+  onDeletePersonnel,
   onUpdateInCharge,
   currentRole,
   lang,
@@ -1208,6 +1210,7 @@ export const CSCForm48View: React.FC<CSCForm48ViewProps> = ({
           personnel={selectedPersonnel}
           departments={departments}
           onUpdatePersonnel={onUpdatePersonnel}
+          onDeletePersonnel={onDeletePersonnel}
         />
       )}
 
