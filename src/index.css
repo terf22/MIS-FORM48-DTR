@@ -1,0 +1,328 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Hide all scrollbars during print or PDF export */
+@media print {
+  html,
+  body,
+  #root,
+  main,
+  div,
+  section,
+  article,
+  aside,
+  nav {
+    overflow: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  ::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+.hide-scrollbars-for-pdf,
+.hide-scrollbars-for-pdf * {
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.hide-scrollbars-for-pdf::-webkit-scrollbar,
+.hide-scrollbars-for-pdf *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Custom sleek scrollbars for normal web view */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+.printable-csc-form {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-radius: 0px !important;
+}
+
+.csc-form-card {
+  width: 3.5in !important;
+  min-width: 3.5in !important;
+  max-width: 3.5in !important;
+  min-height: 8.5in !important;
+  height: auto !important;
+  box-sizing: border-box !important;
+  border-radius: 0px !important;
+  overflow: visible !important;
+  background-color: #ffffff !important;
+}
+
+.printable-csc-form * {
+  border-color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* Fixed 3.5" x 8.5" Form 48 Dimensions Across Any Paper Size */
+.paper-letter .csc-form-card,
+.paper-a4 .csc-form-card,
+.paper-legal .csc-form-card,
+.paper-auto .csc-form-card {
+  width: 3.5in !important;
+  min-width: 3.5in !important;
+  max-width: 3.5in !important;
+  min-height: 8.5in !important;
+  height: auto !important;
+}
+
+@media print {
+  /* Hide all non-printable elements */
+  .print\:hidden,
+  header,
+  nav,
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Force all page containers to pure white background and remove dark shadows/borders */
+  html,
+  body,
+  #root,
+  main,
+  div,
+  section,
+  article {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+  }
+
+  html, body {
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Browser print page margin optimization */
+  @page {
+    size: portrait;
+    margin: 4mm;
+  }
+
+  /* Container auto-fit wrapper */
+  .printable-csc-form {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  /* 1-Up Single Layout Print Formatting - Fixed 3.5" x 8.5" Card centered */
+  .printable-csc-form.layout-1up,
+  .printable-csc-form.layout-1-up {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+  }
+
+  .printable-csc-form.layout-1-up .csc-form-card,
+  .printable-csc-form.layout-1up .csc-form-card {
+    width: 3.5in !important;
+    min-width: 3.5in !important;
+    max-width: 3.5in !important;
+    min-height: 8.5in !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 2-Up Side-by-Side Layout Print Formatting - Two 3.5" x 8.5" Cards Side-by-Side */
+  .printable-csc-form.layout-2up,
+  .printable-csc-form.layout-2-up {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 0.25in !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+  }
+
+  .printable-csc-form.layout-2-up .csc-form-card,
+  .printable-csc-form.layout-2up .csc-form-card {
+    width: 3.5in !important;
+    min-width: 3.5in !important;
+    max-width: 3.5in !important;
+    min-height: 8.5in !important;
+    height: auto !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Paper specific page width & height fitting */
+  .paper-a4,
+  .paper-letter,
+  .paper-legal,
+  .paper-auto {
+    max-width: 100% !important;
+  }
+
+  /* Fixed 3.5" x 8.5" CSC Form Card Print Page Fit Rules across ALL Paper Sizes */
+  .csc-form-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-shadow: none !important;
+    -webkit-box-shadow: none !important;
+    border: 1.5pt solid #000000 !important;
+    border-radius: 0 !important;
+    -webkit-border-radius: 0 !important;
+    outline: none !important;
+    padding: 2mm 2.5mm !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    box-sizing: border-box !important;
+    width: 3.5in !important;
+    min-width: 3.5in !important;
+    max-width: 3.5in !important;
+    min-height: 8.5in !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    overflow: visible !important;
+    -webkit-font-smoothing: antialiased !important;
+  }
+
+  /* Force all text inside card to solid pitch black for maximum print clarity */
+  .csc-form-card * {
+    color: #000000 !important;
+    border-color: #000000 !important;
+  }
+
+  /* Auto-scale table row paddings and text sizes for print inside fixed 8.5in height */
+  .csc-form-card table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1.5pt solid #000000 !important;
+    border-bottom: 1.5pt solid #000000 !important;
+    font-size: 8pt !important;
+    line-height: 1.15 !important;
+    margin-top: 1mm !important;
+    margin-bottom: 1.5mm !important;
+  }
+
+  .csc-form-card tr:last-child td {
+    border-bottom: 1.5pt solid #000000 !important;
+  }
+
+  .csc-form-card td,
+  .csc-form-card th {
+    border: 1pt solid #000000 !important;
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+    padding-left: 1.5px !important;
+    padding-right: 1.5px !important;
+    height: auto !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+  }
+
+  .csc-form-card td {
+    font-size: 8pt !important;
+  }
+
+  .csc-form-card th {
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    font-size: 7pt !important;
+    letter-spacing: 0.01em !important;
+    background-color: transparent !important;
+  }
+
+  /* Compact Scale Preset for tight margins or 31-day months */
+  .scale-compact .csc-form-card table {
+    font-size: 7.5pt !important;
+  }
+
+  .scale-compact .csc-form-card td,
+  .scale-compact .csc-form-card th {
+    padding-top: 0.4px !important;
+    padding-bottom: 0.4px !important;
+  }
+
+  /* Ultra Compact Scale Preset */
+  .scale-ultra .csc-form-card {
+    transform: scale(0.95) !important;
+    transform-origin: top center !important;
+  }
+
+  /* Header & Title Adjustments for Print */
+  .csc-form-card h2 {
+    font-size: 10pt !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.04em !important;
+    padding-bottom: 1px !important;
+    border-bottom: 1.2pt solid #000000 !important;
+  }
+
+  .csc-form-card .header-sub {
+    font-size: 7.5pt !important;
+    font-weight: 700 !important;
+  }
+
+  .csc-form-card .personnel-info {
+    font-size: 8.5pt !important;
+    line-height: 1.15 !important;
+    font-weight: 600 !important;
+  }
+
+  .csc-form-card .footer-text {
+    font-size: 7.5pt !important;
+    line-height: 1.15 !important;
+    font-weight: 500 !important;
+  }
+
+  .csc-form-card .signature-space {
+    padding-top: 2.5mm !important;
+  }
+}
+

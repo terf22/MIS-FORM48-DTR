@@ -1,0 +1,6 @@
+{
+  "name": "Administrative Officer II (AOII) Portal",
+  "description": "DepEd HR & Administrative Portal for Personnel Service Records, Step Increment (NOSI) Engine, CSC Form 48 DTR Management, and Official Administrative Memos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

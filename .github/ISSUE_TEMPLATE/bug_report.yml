@@ -1,0 +1,46 @@
+name: Bug report
+description: Create a report to help us improve the system
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: A concise title or summary of the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How do we trigger this behavior?
+      placeholder: |
+        1. Go to '...'
+        2. Click on '....'
+        3. Scroll down to '....'
+        4. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Affected Module
+      options:
+        - CSC Form 48 Generator / PDF Print
+        - Biometric Kiosk / Attendance Clock
+        - Faculty & Personnel Directory
+        - Leave & OB Management
+        - Overtime / Compensatory Time Off
+        - Analytics & Attendance Reports
+        - System Settings & Data Backup
