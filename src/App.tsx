@@ -664,7 +664,8 @@ export default function App() {
     headName: string,
     headTitle: string,
     targetDeptId?: string,
-    applyToAll?: boolean
+    applyToAll?: boolean,
+    verifiedDate?: string
   ) => {
     // 1. Update departments list
     setDepartments((prev) => {
@@ -700,7 +701,8 @@ export default function App() {
           newMap[key] = {
             ...dtr,
             verifiedBy: headName,
-            verifiedByTitle: headTitle
+            verifiedByTitle: headTitle,
+            ...(verifiedDate !== undefined ? { verifiedDate } : {})
           };
         }
       });
@@ -713,7 +715,8 @@ export default function App() {
           newMap[key] = {
             ...existing,
             verifiedBy: headName,
-            verifiedByTitle: headTitle
+            verifiedByTitle: headTitle,
+            ...(verifiedDate !== undefined ? { verifiedDate } : {})
           };
         }
       });

@@ -304,12 +304,15 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({
               <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Auto-detected & mapped</span>
             </div>
             <div className="flex flex-wrap gap-2 font-mono text-[11px]">
-              {['AC-No.', 'Name', 'Time', 'Date', 'Clock In', 'Clock Out'].map((header) => (
+              {['AC-No.', 'Name', 'Date', 'Time', 'AM Arrival', 'PM Departure'].map((header) => (
                 <span key={header} className="px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 font-bold">
                   {header}
                 </span>
               ))}
             </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              💡 Standard format: <b>Date</b> column has date only (e.g. <code className="font-bold text-emerald-700 dark:text-emerald-300">2026-07-01</code>, no time), and <b>Time</b> column has time only (e.g. <code className="font-bold text-emerald-700 dark:text-emerald-300">07:52 AM</code>, no date).
+            </p>
           </div>
         </div>
       )}

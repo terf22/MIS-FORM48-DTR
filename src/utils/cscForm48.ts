@@ -327,40 +327,54 @@ function parseAndFormatNameString(rawName: string): string {
 }
 
 /**
- * Generates sample Excel binary data with headers AC-No., Name, Time
+ * Generates sample Excel binary data with headers AC-No., Name, Date, Time
+ * Date column has date only (no time), Time column has time only (no date)
  */
 export function generateSampleBiometricExcel(): void {
   const wb = XLSX.utils.book_new();
 
-  // Sheet 1: Standard Biometric Log Format (AC-No., Name, Time)
+  // Sheet 1: Standard Biometric Log Format with separate Date and Time columns
   const sampleData1 = [
-    ['AC-No.', 'Name', 'Time'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 07:52 AM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 12:00 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 01:00 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 05:03 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02 07:58 AM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02 12:01 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02 12:59 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02 05:01 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03 08:14 AM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03 12:00 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03 01:00 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03 05:00 PM'],
-    ['102', 'RIZAL, JOSE P.', '2026-07-01 07:45 AM'],
-    ['102', 'RIZAL, JOSE P.', '2026-07-01 12:00 PM'],
-    ['102', 'RIZAL, JOSE P.', '2026-07-01 01:00 PM'],
-    ['102', 'RIZAL, JOSE P.', '2026-07-01 05:10 PM'],
-    ['102', 'RIZAL, JOSE P.', '2026-07-02 07:50 AM'],
-    ['102', 'RIZAL, JOSE P.', '2026-07-02 05:00 PM'],
-    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01 07:50 AM'],
-    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01 12:00 PM'],
-    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01 01:00 PM'],
-    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01 05:05 PM']
+    ['AC-No.', 'Name', 'Date', 'Time'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '07:52 AM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '12:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '01:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '05:03 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02', '07:58 AM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02', '12:01 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02', '12:59 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02', '05:01 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03', '08:14 AM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03', '12:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03', '01:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03', '05:00 PM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-01', '07:45 AM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-01', '12:00 PM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-01', '01:00 PM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-01', '05:10 PM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-02', '07:50 AM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-02', '05:00 PM'],
+    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01', '07:50 AM'],
+    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01', '12:00 PM'],
+    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01', '01:00 PM'],
+    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01', '05:05 PM']
   ];
 
   const ws1 = XLSX.utils.aoa_to_sheet(sampleData1);
   XLSX.utils.book_append_sheet(wb, ws1, 'Biometric Attendance');
+
+  // Sheet 2: Daily Summary Format with separate Date and Time columns
+  const sampleData2 = [
+    ['AC-No.', 'Name', 'Date', 'AM Arrival', 'AM Departure', 'PM Arrival', 'PM Departure'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '07:52 AM', '12:00 PM', '01:00 PM', '05:03 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-02', '07:58 AM', '12:01 PM', '12:59 PM', '05:01 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-03', '08:14 AM', '12:00 PM', '01:00 PM', '05:00 PM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-01', '07:45 AM', '12:00 PM', '01:00 PM', '05:10 PM'],
+    ['102', 'RIZAL, JOSE P.', '2026-07-02', '07:50 AM', '', '', '05:00 PM'],
+    ['103', 'DEL ROSARIO, JUAN M.', '2026-07-01', '07:50 AM', '12:00 PM', '01:00 PM', '05:05 PM']
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(sampleData2);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Daily Summary Format');
 
   // Generate binary Excel file and download
   XLSX.writeFile(wb, 'Biometric_Attendance_Logs_July_2026.xlsx');
@@ -396,6 +410,12 @@ export function parseExcelDate(dateVal: any): ExtractedDateInfo | null {
   const str = String(dateVal).trim();
   if (!str) return null;
 
+  // CRITICAL: If the string is purely a time value (e.g. "07:52 AM", "12:00:00", "7:52", "17:30"),
+  // it is NOT a date. Return null so that time strings are never mistaken for day numbers.
+  if (/^(\d{1,2}:\d{2}(?::\d{2})?\s*(?:AM|PM|am|pm)?|\d{1,2}\s*(?:AM|PM|am|pm))$/i.test(str)) {
+    return null;
+  }
+
   // ISO or slash YYYY-MM-DD or YYYY/MM/DD
   const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
   if (isoMatch) {
@@ -422,14 +442,16 @@ export function parseExcelDate(dateVal: any): ExtractedDateInfo | null {
     }
   }
 
-  // Textual date parse via JS Date
-  const dateObj = new Date(str);
-  if (!isNaN(dateObj.getTime())) {
-    const y = dateObj.getFullYear();
-    const m = dateObj.getMonth() + 1;
-    const d = dateObj.getDate();
-    if (y >= 2000 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
-      return { year: y, month: m, day: d };
+  // Textual date parse via JS Date (ensure there's an actual date component)
+  if (!/^(\d{1,2}:\d{2})/i.test(str)) {
+    const dateObj = new Date(str);
+    if (!isNaN(dateObj.getTime())) {
+      const y = dateObj.getFullYear();
+      const m = dateObj.getMonth() + 1;
+      const d = dateObj.getDate();
+      if (y >= 2000 && y <= 2100 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+        return { year: y, month: m, day: d };
+      }
     }
   }
 
@@ -462,14 +484,16 @@ export function parseExcelDate(dateVal: any): ExtractedDateInfo | null {
     }
   }
 
-  // Fallback day match
-  const dMatch = str.match(/\b([1-9]|[12]\d|3[01])\b/);
-  if (dMatch) {
-    return {
-      day: parseInt(dMatch[1], 10),
-      month: 7,
-      year: 2026
-    };
+  // Fallback day match ONLY if string does not contain time colon ':'
+  if (!str.includes(':')) {
+    const dMatch = str.match(/\b([1-9]|[12]\d|3[01])\b/);
+    if (dMatch) {
+      return {
+        day: parseInt(dMatch[1], 10),
+        month: 7,
+        year: 2026
+      };
+    }
   }
 
   return null;
@@ -563,11 +587,13 @@ export function convertPunchListToDayEntry(
     pmArrival?: string;
     pmDeparture?: string;
   },
-  personnelType?: string
+  personnelType?: string,
+  dateStr?: string
 ): DTRDayEntry {
   if (!punches || punches.length === 0) {
     return {
       day: dayNum,
+      date: dateStr,
       amArrival: '',
       amDeparture: '',
       pmArrival: '',
@@ -671,6 +697,7 @@ export function convertPunchListToDayEntry(
 
   return {
     day: dayNum,
+    date: dateStr,
     amArrival: amArr,
     amDeparture: amDep,
     pmArrival: pmArr,
@@ -939,25 +966,44 @@ export async function parseExcelBiometricFile(
               personnelNameMap[acNo] = name;
             }
 
-            // Standard AC-No., Name, Time format
+            // Standard AC-No., Name, Date, Time format or single combined datetime column
             if (timeCol !== -1 || (clockInCol === -1 && timeOut1Col === -1 && timeIn2Col === -1)) {
-              const primaryVal = timeCol !== -1 ? row[timeCol] : (dateCol !== -1 ? row[dateCol] : row[2]);
-              const secondaryVal = (timeCol !== -1 && dateCol !== -1) ? row[dateCol] : undefined;
+              let dateInfo: ExtractedDateInfo | null = null;
+              let formattedTime = '';
+              let minsFromMidnight: number | null = null;
 
-              const dt = parseDateTimeValue(primaryVal, secondaryVal);
-              if (dt.dateInfo) {
-                if (dt.dateInfo.month >= 1 && dt.dateInfo.month <= 12) {
-                  monthCounts[dt.dateInfo.month] = (monthCounts[dt.dateInfo.month] || 0) + 1;
+              if (dateCol !== -1 && timeCol !== -1) {
+                // Separate Date and Time columns (standard biometric format: AC-No, Name, Date, Time)
+                // Date column has date only (no time), Time column has time only (no date)
+                dateInfo = parseExcelDate(row[dateCol]);
+                const timeRes = parseDateTimeValue(row[timeCol]);
+                formattedTime = timeRes.formattedTime;
+                minsFromMidnight = timeRes.minsFromMidnight;
+                if (!dateInfo && timeRes.dateInfo) {
+                  dateInfo = timeRes.dateInfo;
                 }
-                if (dt.dateInfo.year >= 2000 && dt.dateInfo.year <= 2100) {
-                  yearCounts[dt.dateInfo.year] = (yearCounts[dt.dateInfo.year] || 0) + 1;
+              } else {
+                const primaryVal = timeCol !== -1 ? row[timeCol] : (dateCol !== -1 ? row[dateCol] : row[2]);
+                const secondaryVal = (timeCol !== -1 && dateCol !== -1) ? row[dateCol] : undefined;
+                const dt = parseDateTimeValue(primaryVal, secondaryVal);
+                dateInfo = dt.dateInfo;
+                formattedTime = dt.formattedTime;
+                minsFromMidnight = dt.minsFromMidnight;
+              }
+
+              if (dateInfo) {
+                if (dateInfo.month >= 1 && dateInfo.month <= 12) {
+                  monthCounts[dateInfo.month] = (monthCounts[dateInfo.month] || 0) + 1;
+                }
+                if (dateInfo.year >= 2000 && dateInfo.year <= 2100) {
+                  yearCounts[dateInfo.year] = (yearCounts[dateInfo.year] || 0) + 1;
                 }
 
-                const dayNum = dt.dateInfo.day;
-                if (dt.minsFromMidnight !== null && dt.formattedTime) {
+                const dayNum = dateInfo.day;
+                if (minsFromMidnight !== null && formattedTime) {
                   if (!punchesMap[acNo]) punchesMap[acNo] = {};
                   if (!punchesMap[acNo][dayNum]) punchesMap[acNo][dayNum] = [];
-                  punchesMap[acNo][dayNum].push({ timeStr: dt.formattedTime, mins: dt.minsFromMidnight });
+                  punchesMap[acNo][dayNum].push({ timeStr: formattedTime, mins: minsFromMidnight });
                   parsedCount++;
                   continue;
                 }
@@ -1082,20 +1128,39 @@ export async function parseExcelBiometricFile(
             const dateVal = row['Date'] || row['Log Date'];
 
             if (timeVal || dateVal) {
-              const dt = parseDateTimeValue(timeVal || dateVal, dateVal && timeVal ? dateVal : undefined);
-              if (dt.dateInfo) {
-                if (dt.dateInfo.month >= 1 && dt.dateInfo.month <= 12) {
-                  monthCounts[dt.dateInfo.month] = (monthCounts[dt.dateInfo.month] || 0) + 1;
+              let dateInfo: ExtractedDateInfo | null = null;
+              let formattedTime = '';
+              let minsFromMidnight: number | null = null;
+
+              if (dateVal && timeVal) {
+                // Separate Date and Time fields: Date has date only (no time), Time has time only (no date)
+                dateInfo = parseExcelDate(dateVal);
+                const timeRes = parseDateTimeValue(timeVal);
+                formattedTime = timeRes.formattedTime;
+                minsFromMidnight = timeRes.minsFromMidnight;
+                if (!dateInfo && timeRes.dateInfo) {
+                  dateInfo = timeRes.dateInfo;
                 }
-                if (dt.dateInfo.year >= 2000 && dt.dateInfo.year <= 2100) {
-                  yearCounts[dt.dateInfo.year] = (yearCounts[dt.dateInfo.year] || 0) + 1;
+              } else {
+                const dt = parseDateTimeValue(timeVal || dateVal, dateVal && timeVal ? dateVal : undefined);
+                dateInfo = dt.dateInfo;
+                formattedTime = dt.formattedTime;
+                minsFromMidnight = dt.minsFromMidnight;
+              }
+
+              if (dateInfo) {
+                if (dateInfo.month >= 1 && dateInfo.month <= 12) {
+                  monthCounts[dateInfo.month] = (monthCounts[dateInfo.month] || 0) + 1;
+                }
+                if (dateInfo.year >= 2000 && dateInfo.year <= 2100) {
+                  yearCounts[dateInfo.year] = (yearCounts[dateInfo.year] || 0) + 1;
                 }
 
-                const dayNum = dt.dateInfo.day;
-                if (dt.minsFromMidnight !== null && dt.formattedTime) {
+                const dayNum = dateInfo.day;
+                if (minsFromMidnight !== null && formattedTime) {
                   if (!punchesMap[acNo]) punchesMap[acNo] = {};
                   if (!punchesMap[acNo][dayNum]) punchesMap[acNo][dayNum] = [];
-                  punchesMap[acNo][dayNum].push({ timeStr: dt.formattedTime, mins: dt.minsFromMidnight });
+                  punchesMap[acNo][dayNum].push({ timeStr: formattedTime, mins: minsFromMidnight });
                   parsedCount++;
                   return;
                 }
@@ -1131,6 +1196,25 @@ export async function parseExcelBiometricFile(
           });
         }
 
+        // Determine detected month and year first so each DTRDayEntry has exact ISO date (date only, no time)
+        let detectedMonth = 7; // July default fallback
+        let maxM = 0;
+        Object.entries(monthCounts).forEach(([mStr, count]) => {
+          if (count > maxM) {
+            maxM = count;
+            detectedMonth = parseInt(mStr, 10);
+          }
+        });
+
+        let detectedYear = 2026;
+        let maxY = 0;
+        Object.entries(yearCounts).forEach(([yStr, count]) => {
+          if (count > maxY) {
+            maxY = count;
+            detectedYear = parseInt(yStr, 10);
+          }
+        });
+
         // Process all accumulated punches into DTR Day Entries
         Object.keys(punchesMap).forEach((acNo) => {
           if (!personnelLogsMap[acNo]) {
@@ -1153,7 +1237,8 @@ export async function parseExcelBiometricFile(
           const daysMap = punchesMap[acNo];
           Object.keys(daysMap).forEach((dStr) => {
             const dayNum = parseInt(dStr, 10);
-            const dayEntry = convertPunchListToDayEntry(dayNum, daysMap[dayNum], schedule, pType);
+            const dateStr = `${detectedYear}-${String(detectedMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+            const dayEntry = convertPunchListToDayEntry(dayNum, daysMap[dayNum], schedule, pType, dateStr);
 
             const existingIdx = personnelLogsMap[acNo].findIndex((d) => d.day === dayNum);
             if (existingIdx >= 0) {
@@ -1162,27 +1247,16 @@ export async function parseExcelBiometricFile(
               personnelLogsMap[acNo].push(dayEntry);
             }
           });
+
+          // Ensure all day entries in personnelLogsMap have their date populated
+          personnelLogsMap[acNo].forEach((d) => {
+            if (!d.date) {
+              d.date = `${detectedYear}-${String(detectedMonth).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+            }
+          });
+
           // Sort daily entries by day number
           personnelLogsMap[acNo].sort((a, b) => a.day - b.day);
-        });
-
-        // Determine detected month and year
-        let detectedMonth = 7; // July default fallback
-        let maxM = 0;
-        Object.entries(monthCounts).forEach(([mStr, count]) => {
-          if (count > maxM) {
-            maxM = count;
-            detectedMonth = parseInt(mStr, 10);
-          }
-        });
-
-        let detectedYear = 2026;
-        let maxY = 0;
-        Object.entries(yearCounts).forEach(([yStr, count]) => {
-          if (count > maxY) {
-            maxY = count;
-            detectedYear = parseInt(yStr, 10);
-          }
         });
 
         const monthNamesList = [

@@ -200,10 +200,12 @@ export function generateDefaultDTR(personnel: Personnel, month = 7, year = 2026)
     // Determine day of week
     const dateObj = new Date(year, month - 1, d);
     const dayOfWeek = dateObj.getDay(); // 0 = Sun, 6 = Sat
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
     if (dayOfWeek === 0) {
       days.push({
         day: d,
+        date: dateStr,
         amArrival: 'SUNDAY',
         amDeparture: '',
         pmArrival: '',
@@ -215,6 +217,7 @@ export function generateDefaultDTR(personnel: Personnel, month = 7, year = 2026)
     } else if (dayOfWeek === 6) {
       days.push({
         day: d,
+        date: dateStr,
         amArrival: 'SATURDAY',
         amDeparture: '',
         pmArrival: '',
@@ -226,6 +229,7 @@ export function generateDefaultDTR(personnel: Personnel, month = 7, year = 2026)
     } else {
       days.push({
         day: d,
+        date: dateStr,
         amArrival: '',
         amDeparture: '',
         pmArrival: '',

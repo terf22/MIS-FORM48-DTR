@@ -46,7 +46,7 @@ interface CSCForm48ViewProps {
   onUpdateDTRDay: (dayNum: number, fieldOrObject: any, value?: any, targetPersonId?: string) => void;
   onUpdatePersonnel?: (updated: Personnel) => void;
   onDeletePersonnel?: (personnelId: string) => void;
-  onUpdateInCharge?: (headName: string, headTitle: string, targetDeptId?: string, applyToAll?: boolean) => void;
+  onUpdateInCharge?: (headName: string, headTitle: string, targetDeptId?: string, applyToAll?: boolean, verifiedDate?: string) => void;
   currentRole: UserRole;
   lang: LanguageCode;
   onLogAudit: (action: string, category: 'DTR_EDIT' | 'SYSTEM', details: string) => void;
@@ -636,6 +636,7 @@ export const CSCForm48View: React.FC<CSCForm48ViewProps> = ({
   const handleExportExcel = () => {
     if (!selectedPersonnel || !monthlyDTR) return;
     const exportRows = monthlyDTR.days.map((d) => ({
+      'Date': d.date || `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`,
       'Day': d.day,
       'A.M. Arrival': d.amArrival,
       'A.M. Departure': d.amDeparture,
@@ -1237,8 +1238,9 @@ export const CSCForm48View: React.FC<CSCForm48ViewProps> = ({
             departments.find((d) => d.id === selectedPersonnel?.departmentId)?.headTitle ||
             'In-Charge / Department Head'
           }
-          onUpdateInCharge={(headName, headTitle, targetDeptId, applyToAll) => {
-            onUpdateInCharge(headName, headTitle, targetDeptId, applyToAll);
+          currentVerifiedDate={monthlyDTR?.verifiedDate}
+          onUpdateInCharge={(headName, headTitle, targetDeptId, applyToAll, verifiedDate) => {
+            onUpdateInCharge(headName, headTitle, targetDeptId, applyToAll, verifiedDate);
             setIsEditInChargeOpen(false);
           }}
         />
@@ -1601,7 +1603,10 @@ const SingleCSCFormCard: React.FC<SingleCSCFormProps> = ({
                     }`}
                   >
                     {/* Day Column */}
-                    <td className="border-r border-black font-extrabold text-black py-[2px] text-center text-[10px]">
+                    <td
+                      className="border-r border-black font-extrabold text-black py-[2px] text-center text-[10px]"
+                      title={day.date || `${monthName} ${day.day}, ${selectedYear}`}
+                    >
                       {day.day}
                     </td>
 
@@ -1818,6 +1823,7 @@ const SingleCSCFormCard: React.FC<SingleCSCFormProps> = ({
           const dept = departments.find((d) => d.id === selectedPersonnel.departmentId);
           const inChargeName = monthlyDTR?.verifiedBy || dept?.headName || 'DR. ROBERTO V. GARCIA';
           const inChargeTitle = monthlyDTR?.verifiedByTitle || dept?.headTitle || t.inChargeSignature || 'In-Charge / Department Head';
+          const verifiedDateStr = monthlyDTR?.verifiedDate || `${monthName} ${endDay}, ${selectedYear}`;
 
           return (
             <div className="pt-2 text-center space-y-0.5 relative">
@@ -1827,6 +1833,9 @@ const SingleCSCFormCard: React.FC<SingleCSCFormProps> = ({
                 </p>
                 <p className="text-[8.5px] font-bold text-gray-600 print:text-black tracking-wider uppercase">
                   {inChargeTitle}
+                </p>
+                <p className="text-[8px] text-gray-600 print:text-black mt-0.5 font-sans">
+                  Date: <span className="font-semibold underline">{verifiedDateStr}</span>
                 </p>
                 {(currentRole === 'admin' || currentRole === 'dept_head') && onOpenEditInCharge && (
                   <button

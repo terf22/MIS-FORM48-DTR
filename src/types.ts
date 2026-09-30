@@ -138,6 +138,7 @@ export interface Personnel {
 
 export interface DTRDayEntry {
   day: number;
+  date?: string; // Format YYYY-MM-DD (Date only, no time)
   amArrival: string;
   amDeparture: string;
   pmArrival: string;

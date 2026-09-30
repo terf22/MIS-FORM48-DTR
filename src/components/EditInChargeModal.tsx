@@ -9,11 +9,13 @@ interface EditInChargeModalProps {
   departments: Department[];
   currentInChargeName: string;
   currentInChargeTitle?: string;
+  currentVerifiedDate?: string;
   onUpdateInCharge: (
     headName: string,
     headTitle: string,
     targetDeptId?: string,
-    applyToAll?: boolean
+    applyToAll?: boolean,
+    verifiedDate?: string
   ) => void;
 }
 
@@ -24,10 +26,12 @@ export const EditInChargeModal: React.FC<EditInChargeModalProps> = ({
   departments,
   currentInChargeName,
   currentInChargeTitle,
+  currentVerifiedDate,
   onUpdateInCharge
 }) => {
   const [inChargeName, setInChargeName] = useState('');
   const [inChargeTitle, setInChargeTitle] = useState('In-Charge / Department Head');
+  const [verifiedDate, setVerifiedDate] = useState('');
   const [targetDeptId, setTargetDeptId] = useState('');
   const [applyScope, setApplyScope] = useState<'department' | 'all'>('department');
 
@@ -46,12 +50,16 @@ export const EditInChargeModal: React.FC<EditInChargeModalProps> = ({
       setInChargeTitle(dept?.headTitle || 'In-Charge / Department Head');
     }
 
+    if (currentVerifiedDate) {
+      setVerifiedDate(currentVerifiedDate);
+    }
+
     if (selectedPersonnel) {
       setTargetDeptId(selectedPersonnel.departmentId);
     } else if (departments.length > 0) {
       setTargetDeptId(departments[0].id);
     }
-  }, [currentInChargeName, currentInChargeTitle, selectedPersonnel, departments, isOpen]);
+  }, [currentInChargeName, currentInChargeTitle, currentVerifiedDate, selectedPersonnel, departments, isOpen]);
 
   if (!isOpen) return null;
 
@@ -63,7 +71,8 @@ export const EditInChargeModal: React.FC<EditInChargeModalProps> = ({
       inChargeName.trim().toUpperCase(),
       inChargeTitle.trim(),
       targetDeptId,
-      applyScope === 'all'
+      applyScope === 'all',
+      verifiedDate.trim()
     );
     onClose();
   };
@@ -144,6 +153,23 @@ export const EditInChargeModal: React.FC<EditInChargeModalProps> = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Verification Date (Date only, no time) */}
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1">
+              Verification Date (Date Only, No Time)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. July 31, 2026 or 2026-07-31"
+              value={verifiedDate}
+              onChange={(e) => setVerifiedDate(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+            />
+            <p className="text-[10px] text-slate-500 mt-1">
+              Date without time appearing below the In-Charge signatory on Form 48.
+            </p>
           </div>
 
           {/* Department Selection */}

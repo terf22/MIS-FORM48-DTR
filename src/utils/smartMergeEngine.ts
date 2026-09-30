@@ -716,48 +716,48 @@ export function generateSampleSmartMergeExcel(): void {
   const wb = XLSX.utils.book_new();
 
   const rows = [
-    ['AC-No.', 'Name', 'Time'],
+    ['AC-No.', 'Name', 'Date', 'Time'],
     // Safe Auto-Merge (Maria Clara Santos)
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 07:45 AM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 12:00 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 01:00 PM'],
-    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01 05:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '07:45 AM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '12:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '01:00 PM'],
+    ['101', 'SANTOS, MARIA CLARA L.', '2026-07-01', '05:00 PM'],
 
     // Typo Tolerance: Squished characters (Jenevi-veAntido)
-    ['102', 'Jenevi-veAntido', '2026-07-01 07:28 AM'],
-    ['102', 'Jenevi-veAntido', '2026-07-01 12:01 PM'],
-    ['102', 'Jenevi-veAntido', '2026-07-01 12:58 PM'],
-    ['102', 'Jenevi-veAntido', '2026-07-01 04:32 PM'],
+    ['102', 'Jenevi-veAntido', '2026-07-01', '07:28 AM'],
+    ['102', 'Jenevi-veAntido', '2026-07-01', '12:01 PM'],
+    ['102', 'Jenevi-veAntido', '2026-07-01', '12:58 PM'],
+    ['102', 'Jenevi-veAntido', '2026-07-01', '04:32 PM'],
 
     // Typo Tolerance: Typographical comma in middle initials (Ma Elvie D,R Acma)
-    ['103', 'Ma Elvie D,R Acma', '2026-07-01 07:30 AM'],
-    ['103', 'Ma Elvie D,R Acma', '2026-07-01 12:00 PM'],
-    ['103', 'Ma Elvie D,R Acma', '2026-07-01 01:00 PM'],
-    ['103', 'Ma Elvie D,R Acma', '2026-07-01 04:30 PM'],
+    ['103', 'Ma Elvie D,R Acma', '2026-07-01', '07:30 AM'],
+    ['103', 'Ma Elvie D,R Acma', '2026-07-01', '12:00 PM'],
+    ['103', 'Ma Elvie D,R Acma', '2026-07-01', '01:00 PM'],
+    ['103', 'Ma Elvie D,R Acma', '2026-07-01', '04:30 PM'],
 
     // Philippine Compound Surname Awareness (dela Cruz, Juan P.)
-    ['104', 'dela Cruz, Juan P.', '2026-07-01 07:55 AM'],
-    ['104', 'dela Cruz, Juan P.', '2026-07-01 12:05 PM'],
-    ['104', 'dela Cruz, Juan P.', '2026-07-01 01:00 PM'],
-    ['104', 'dela Cruz, Juan P.', '2026-07-01 05:02 PM'],
+    ['104', 'dela Cruz, Juan P.', '2026-07-01', '07:55 AM'],
+    ['104', 'dela Cruz, Juan P.', '2026-07-01', '12:05 PM'],
+    ['104', 'dela Cruz, Juan P.', '2026-07-01', '01:00 PM'],
+    ['104', 'dela Cruz, Juan P.', '2026-07-01', '05:02 PM'],
 
     // Conflict Condition B: Collision - Hardware Slot Reassigned (ID Match, Name Mismatch)
-    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01 07:50 AM'],
-    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01 12:00 PM'],
-    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01 01:00 PM'],
-    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01 05:00 PM'],
+    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01', '07:50 AM'],
+    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01', '12:00 PM'],
+    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01', '01:00 PM'],
+    ['105', 'BAUTISTA, ALLAN M.', '2026-07-01', '05:00 PM'],
 
     // Conflict Condition B: Name Match, ID Mismatch (RIZAL, JOSE P. on new AC-No 999)
-    ['999', 'RIZAL, JOSE P.', '2026-07-01 07:40 AM'],
-    ['999', 'RIZAL, JOSE P.', '2026-07-01 12:00 PM'],
-    ['999', 'RIZAL, JOSE P.', '2026-07-01 01:00 PM'],
-    ['999', 'RIZAL, JOSE P.', '2026-07-01 05:15 PM'],
+    ['999', 'RIZAL, JOSE P.', '2026-07-01', '07:40 AM'],
+    ['999', 'RIZAL, JOSE P.', '2026-07-01', '12:00 PM'],
+    ['999', 'RIZAL, JOSE P.', '2026-07-01', '01:00 PM'],
+    ['999', 'RIZAL, JOSE P.', '2026-07-01', '05:15 PM'],
 
     // Condition C: New Personnel Onboarding (Uncatalogued teacher detected)
-    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01 07:35 AM'],
-    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01 12:00 PM'],
-    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01 01:00 PM'],
-    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01 04:35 PM']
+    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01', '07:35 AM'],
+    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01', '12:00 PM'],
+    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01', '01:00 PM'],
+    ['108', 'MENDOZA, KRISTINE JOY C.', '2026-07-01', '04:35 PM']
   ];
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
