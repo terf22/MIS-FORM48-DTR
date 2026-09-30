@@ -10,7 +10,8 @@ import {
   SmartMergeAnalysis,
   ConflictResolutionChoice
 } from '../types';
-import { calculateDayTimeLoss, generateSampleBiometricExcel } from './cscForm48';
+import { calculateDayTimeLoss, generateSampleBiometricExcel, getDaysInMonth } from './cscForm48';
+import { generateDefaultDTR } from '../data/mockData';
 
 /**
  * Common Philippine Compound Surname Prefixes
@@ -493,27 +494,35 @@ export function executeSmartMergeApplication(
   // Helper to merge punch days into a person's DTR safely
   const mergeLogsIntoDTR = (person: Personnel, logs: DTRDayEntry[]) => {
     const key = `${person.id}-${targetYear}-${targetMonth}`;
-    const existingDTR = updatedDtrMap[key] || {
-      id: key,
-      personnelId: person.id,
-      employeeName: person.fullName || person.name,
-      employeeId: person.employeeId || person.employeeNumber,
-      departmentName: person.departmentName || defaultDepartmentName,
-      personnelType: person.personnelType || 'teaching',
-      month: targetMonth,
-      year: targetYear,
-      officialHoursRegular: '8:00 AM - 5:00 PM',
-      officialHoursSaturday: 'As required',
-      days: [],
-      totalHoursWorked: 0,
-      totalLateMinutes: 0,
-      totalUndertimeMinutes: 0,
-      isVerifiedByHead: false,
-      certifiedByEmployee: false
-    };
+    const daysInMonthCount = getDaysInMonth(targetMonth, targetYear);
+    const existingDTR = updatedDtrMap[key] || generateDefaultDTR(person, targetMonth, targetYear);
 
     const dayMap = new Map<number, DTRDayEntry>();
     existingDTR.days.forEach((d) => dayMap.set(d.day, d));
+
+    // Ensure all days 1..daysInMonthCount are initially populated
+    for (let d = 1; d <= daysInMonthCount; d++) {
+      if (!dayMap.has(d)) {
+        const dateObj = new Date(targetYear, targetMonth - 1, d);
+        const dayOfWeek = dateObj.getDay();
+        const dateStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isSun = dayOfWeek === 0;
+        const isSat = dayOfWeek === 6;
+        dayMap.set(d, {
+          day: d,
+          date: dateStr,
+          amArrival: isSun ? 'SUNDAY' : isSat ? 'SATURDAY' : '',
+          amDeparture: '',
+          pmArrival: '',
+          pmDeparture: '',
+          statusTag: isSun ? 'SUNDAY' : isSat ? 'SATURDAY' : 'REGULAR',
+          remarks: '',
+          lateMinutes: 0,
+          undertimeMinutes: 0,
+          isAdjusted: false
+        });
+      }
+    }
 
     logs.forEach((incomingDay) => {
       if (incomingDay.day >= 1 && incomingDay.day <= 31) {
@@ -575,6 +584,11 @@ export function executeSmartMergeApplication(
     });
 
     const newDaysArray = Array.from(dayMap.values()).sort((a, b) => a.day - b.day);
+    newDaysArray.forEach((d) => {
+      if (!d.date) {
+        d.date = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+      }
+    });
     const totalLate = newDaysArray.reduce((acc, c) => acc + (c.lateMinutes || 0), 0);
     const totalUnder = newDaysArray.reduce((acc, c) => acc + (c.undertimeMinutes || 0), 0);
 

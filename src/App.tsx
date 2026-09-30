@@ -6,7 +6,7 @@ import { CSCForm48View } from './components/CSCForm48View';
 import { ExcelUploader } from './components/ExcelUploader';
 import { AddPersonnelModal } from './components/AddPersonnelModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
-import { calculateDayTimeLoss } from './utils/cscForm48';
+import { calculateDayTimeLoss, getDaysInMonth } from './utils/cscForm48';
 import { executeSmartMergeApplication } from './utils/smartMergeEngine';
 import {
   INITIAL_PERSONNEL,
@@ -407,10 +407,35 @@ export default function App() {
       }
 
       const key = `${person.id}-${targetYear}-${targetMonth}`;
+      const daysInMonthCount = getDaysInMonth(targetMonth, targetYear);
       const existingDTR = updatedDtrMap[key] || generateDefaultDTR(person, targetMonth, targetYear);
 
       const dayMap = new Map<number, DTRDayEntry>();
       existingDTR.days.forEach((d) => dayMap.set(d.day, d));
+
+      // Guarantee all days of the month are present
+      for (let d = 1; d <= daysInMonthCount; d++) {
+        if (!dayMap.has(d)) {
+          const dateObj = new Date(targetYear, targetMonth - 1, d);
+          const dayOfWeek = dateObj.getDay();
+          const dateStr = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const isSun = dayOfWeek === 0;
+          const isSat = dayOfWeek === 6;
+          dayMap.set(d, {
+            day: d,
+            date: dateStr,
+            amArrival: isSun ? 'SUNDAY' : isSat ? 'SATURDAY' : '',
+            amDeparture: '',
+            pmArrival: '',
+            pmDeparture: '',
+            statusTag: isSun ? 'SUNDAY' : isSat ? 'SATURDAY' : 'REGULAR',
+            remarks: '',
+            lateMinutes: 0,
+            undertimeMinutes: 0,
+            isAdjusted: false
+          });
+        }
+      }
 
       logs.forEach((incomingDay) => {
         if (incomingDay.day >= 1 && incomingDay.day <= 31) {
@@ -463,6 +488,11 @@ export default function App() {
       });
 
       const newDaysArray: DTRDayEntry[] = Array.from(dayMap.values()).sort((a, b) => a.day - b.day);
+      newDaysArray.forEach((d) => {
+        if (!d.date) {
+          d.date = `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+        }
+      });
       const totalLate = newDaysArray.reduce((acc, curr) => acc + (curr.lateMinutes || 0), 0);
       const totalUndertime = newDaysArray.reduce((acc, curr) => acc + (curr.undertimeMinutes || 0), 0);
 

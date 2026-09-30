@@ -28,7 +28,7 @@ import {
   X,
   Users
 } from 'lucide-react';
-import { MonthlyDTR, Personnel, UserRole, LanguageCode, Department } from '../types';
+import { MonthlyDTR, Personnel, UserRole, LanguageCode, Department, DTRDayEntry } from '../types';
 import { formatCSCTime, formatMinutesLabel, formatForm48Name } from '../utils/cscForm48';
 import { translations } from '../utils/translations';
 import { DayNoteModal } from './DayNoteModal';
@@ -158,7 +158,42 @@ export const CSCForm48View: React.FC<CSCForm48ViewProps> = ({
   const actualStartDay = Math.max(1, Math.min(startDay, daysInMonth));
   const actualEndDay = Math.max(actualStartDay, Math.min(endDay, daysInMonth));
 
-  const filteredDays = monthlyDTR ? monthlyDTR.days.filter((d) => d.day >= actualStartDay && d.day <= actualEndDay) : [];
+  const filteredDays = React.useMemo(() => {
+    if (!monthlyDTR) return [];
+    const dayMap = new Map<number, DTRDayEntry>();
+    (monthlyDTR.days || []).forEach((d) => dayMap.set(d.day, d));
+
+    const result: DTRDayEntry[] = [];
+    for (let d = actualStartDay; d <= actualEndDay; d++) {
+      if (dayMap.has(d)) {
+        const item = { ...dayMap.get(d)! };
+        if (!item.date) {
+          item.date = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+        result.push(item);
+      } else {
+        const dateObj = new Date(selectedYear, selectedMonth - 1, d);
+        const dayOfWeek = dateObj.getDay();
+        const dateStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isSun = dayOfWeek === 0;
+        const isSat = dayOfWeek === 6;
+        result.push({
+          day: d,
+          date: dateStr,
+          amArrival: isSun ? 'SUNDAY' : isSat ? 'SATURDAY' : '',
+          amDeparture: '',
+          pmArrival: '',
+          pmDeparture: '',
+          statusTag: isSun ? 'SUNDAY' : isSat ? 'SATURDAY' : 'REGULAR',
+          remarks: '',
+          lateMinutes: 0,
+          undertimeMinutes: 0,
+          isAdjusted: false
+        });
+      }
+    }
+    return result;
+  }, [monthlyDTR, actualStartDay, actualEndDay, selectedYear, selectedMonth]);
 
   const totalLate = filteredDays.reduce((acc, curr) => acc + (curr.lateMinutes || 0), 0);
   const totalUndertime = filteredDays.reduce((acc, curr) => acc + (curr.undertimeMinutes || 0), 0);

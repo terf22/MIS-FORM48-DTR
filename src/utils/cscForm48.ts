@@ -909,7 +909,7 @@ export async function parseExcelBiometricFile(
               tName = cIdx;
             } else if (/^(time|date\s*time|date\/time|date-time|timestamp|log\s*time|check\s*time|punch\s*time)$/i.test(val)) {
               tTime = cIdx;
-            } else if (/^(date|log\s*date)$/i.test(val)) {
+            } else if (/^(date|log\s*date|day|days|day\s*of\s*month|dates)$/i.test(val)) {
               tDate = cIdx;
             } else if (/^(timetable|schedule|shift)$/i.test(val)) {
               tTimetable = cIdx;
@@ -929,7 +929,7 @@ export async function parseExcelBiometricFile(
           });
 
           const matchesCount = [tAcNo, tName, tTime, tDate, tClockIn, tClockOut, tOnDuty, tOffDuty].filter((i) => i !== -1).length;
-          if (matchesCount >= 2) {
+          if (matchesCount >= 2 || (matchesCount >= 1 && (tDate !== -1 || tTime !== -1 || tClockIn !== -1))) {
             headerRowIndex = r;
             acNoCol = tAcNo;
             nameCol = tName;
@@ -1004,6 +1004,11 @@ export async function parseExcelBiometricFile(
                   if (!punchesMap[acNo]) punchesMap[acNo] = {};
                   if (!punchesMap[acNo][dayNum]) punchesMap[acNo][dayNum] = [];
                   punchesMap[acNo][dayNum].push({ timeStr: formattedTime, mins: minsFromMidnight });
+                  parsedCount++;
+                  continue;
+                } else {
+                  // No time punch on this row, but date and employee are recognized
+                  if (!personnelLogsMap[acNo]) personnelLogsMap[acNo] = [];
                   parsedCount++;
                   continue;
                 }
@@ -1163,6 +1168,11 @@ export async function parseExcelBiometricFile(
                   punchesMap[acNo][dayNum].push({ timeStr: formattedTime, mins: minsFromMidnight });
                   parsedCount++;
                   return;
+                } else {
+                  // No time punch on this row, but date and employee are recognized
+                  if (!personnelLogsMap[acNo]) personnelLogsMap[acNo] = [];
+                  parsedCount++;
+                  return;
                 }
               }
             }
@@ -1215,12 +1225,19 @@ export async function parseExcelBiometricFile(
           }
         });
 
-        // Process all accumulated punches into DTR Day Entries
-        Object.keys(punchesMap).forEach((acNo) => {
-          if (!personnelLogsMap[acNo]) {
-            personnelLogsMap[acNo] = [];
-          }
+        const daysInMonthCount = getDaysInMonth(detectedMonth, detectedYear);
 
+        // Gather all unique personnel / AC-Nos detected in the file
+        const allAcNos = Array.from(
+          new Set([
+            ...Object.keys(punchesMap),
+            ...Object.keys(personnelLogsMap),
+            ...Object.keys(personnelNameMap)
+          ])
+        );
+
+        // Process and reflect the whole day of the month (1..daysInMonthCount) for each employee
+        allAcNos.forEach((acNo) => {
           const personName = personnelNameMap[acNo] || '';
           const matchedPersonnel = personnelList?.find(
             (p) =>
@@ -1234,29 +1251,50 @@ export async function parseExcelBiometricFile(
           const schedule = matchedPersonnel?.regularSchedule;
           const pType = matchedPersonnel?.personnelType;
 
-          const daysMap = punchesMap[acNo];
-          Object.keys(daysMap).forEach((dStr) => {
-            const dayNum = parseInt(dStr, 10);
-            const dateStr = `${detectedYear}-${String(detectedMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-            const dayEntry = convertPunchListToDayEntry(dayNum, daysMap[dayNum], schedule, pType, dateStr);
+          const daysMap = punchesMap[acNo] || {};
+          const existingList = personnelLogsMap[acNo] || [];
+          const existingDayMap = new Map<number, DTRDayEntry>();
+          existingList.forEach((d) => existingDayMap.set(d.day, d));
 
-            const existingIdx = personnelLogsMap[acNo].findIndex((d) => d.day === dayNum);
-            if (existingIdx >= 0) {
-              personnelLogsMap[acNo][existingIdx] = dayEntry;
+          const fullMonthDays: DTRDayEntry[] = [];
+
+          for (let d = 1; d <= daysInMonthCount; d++) {
+            const dateStr = `${detectedYear}-${String(detectedMonth).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const dateObj = new Date(detectedYear, detectedMonth - 1, d);
+            const dayOfWeek = dateObj.getDay(); // 0 = Sun, 6 = Sat
+            const isSunday = dayOfWeek === 0;
+            const isSaturday = dayOfWeek === 6;
+
+            if (daysMap[d] && daysMap[d].length > 0) {
+              const dayEntry = convertPunchListToDayEntry(d, daysMap[d], schedule, pType, dateStr);
+              fullMonthDays.push(dayEntry);
+            } else if (existingDayMap.has(d)) {
+              const existing = existingDayMap.get(d)!;
+              fullMonthDays.push({
+                ...existing,
+                day: d,
+                date: existing.date || dateStr
+              });
             } else {
-              personnelLogsMap[acNo].push(dayEntry);
+              // Even if there is no time parsed for this day or the whole file, reflect the whole day of the month
+              fullMonthDays.push({
+                day: d,
+                date: dateStr,
+                amArrival: isSunday ? 'SUNDAY' : isSaturday ? 'SATURDAY' : '',
+                amDeparture: '',
+                pmArrival: '',
+                pmDeparture: '',
+                statusTag: isSunday ? 'SUNDAY' : isSaturday ? 'SATURDAY' : 'REGULAR',
+                remarks: '',
+                lateMinutes: 0,
+                undertimeMinutes: 0,
+                isAdjusted: false
+              });
             }
-          });
+          }
 
-          // Ensure all day entries in personnelLogsMap have their date populated
-          personnelLogsMap[acNo].forEach((d) => {
-            if (!d.date) {
-              d.date = `${detectedYear}-${String(detectedMonth).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
-            }
-          });
-
-          // Sort daily entries by day number
-          personnelLogsMap[acNo].sort((a, b) => a.day - b.day);
+          fullMonthDays.sort((a, b) => a.day - b.day);
+          personnelLogsMap[acNo] = fullMonthDays;
         });
 
         const monthNamesList = [
